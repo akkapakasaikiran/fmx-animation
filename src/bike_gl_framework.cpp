@@ -89,14 +89,14 @@ namespace csX75
 			curr_node->inc_tz();
 		// Camera Controls
 		else if((key == GLFW_KEY_KP_ADD || (key == GLFW_KEY_EQUAL && mods==GLFW_MOD_SHIFT)) && action == GLFW_PRESS){
-			c_xpos+=1;
-			c_ypos-=0.6;
-			c_ypos-=0.8;
+			c_xpos += 1;
+			c_ypos -= 0.6;
+			c_ypos -= 0.8;
 		}
 		else if((key == GLFW_KEY_KP_SUBTRACT || key == GLFW_KEY_MINUS) && action == GLFW_PRESS){
-			c_xpos-=1;
-			c_ypos+=0.6;
-			c_ypos+=0.8;
+			c_xpos -= 1;
+			c_ypos += 0.6;
+			c_ypos += 0.8;
 		}  
 	}
 };  

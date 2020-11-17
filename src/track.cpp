@@ -482,21 +482,68 @@ void initBuffersGL(void)
 
 }
 
+
+glm::mat4 loadCameras(void){
+
+	glm::vec3 posn(-50.0, 30.0, 40.0);
+	glm::vec3 rot(0.0, 0.0, 0.0);
+	glm::vec3 up(0.0, 1.0, 0.0);
+	glm::vec3 lookat_pt(0.0, 0.0, 0.0);
+	
+	cameras["global"] = new csX75::Camera(posn, rot, up, lookat_pt);
+
+	glm::mat4 mult = nodes["root"]->get_transformation();
+	mult *= nodes["hip"]->get_transformation();
+	lookat_pt = glm::vec3(mult * glm::vec4(glm::vec3(0.0), 1.0));
+	posn = glm::vec3(lookat_pt + glm::vec3(20.0, 10.0, 10.0));
+
+	cameras["third_person"] = new csX75::Camera(posn, rot, up, lookat_pt);
+
+	mult = nodes["root"]->get_transformation();
+	mult *= nodes["hip"]->get_transformation();
+	mult *= nodes["torso"]->get_transformation();
+	mult *= nodes["neck"]->get_transformation();
+	mult *= nodes["head"]->get_transformation();
+
+	posn = glm::vec3(mult * glm::vec4(0.0, 0.0, 0.0, 1.0));
+	lookat_pt = glm::vec3(mult * glm::vec4(0.0, 0.0, 1.0, 1.0));
+
+	std::cout<<glm::to_string(posn)<<glm::to_string(lookat_pt)<<"\n";
+
+	cameras["go_pro"] = new csX75::Camera(posn, rot, up, lookat_pt);
+
+	// camera_num is defined in common.hpp 
+	if(camera_num == 0){
+		curr_camera = cameras["global"];
+		return glm::frustum(-1.0, 1.0, -1.0, 1.0, 10.0, 500.0);
+	}
+	else if(camera_num == 1){
+		curr_camera = cameras["third_person"];
+		return glm::frustum(-0.2, 0.2, -0.2, 0.2, 2.0, 100.0);
+	}
+	else if(camera_num == 2){
+		curr_camera = cameras["go_pro"];
+		// return glm::ortho(-20.0, 20.0, -20.0, 20.0, -20.0, 20.0); 
+		return glm::frustum(-0.02, 0.02, -0.02, 0.02, 0.025, 10.0);
+	}
+
+}
+
 void renderGL(void)
 {
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 	matrixStack.clear();
 
-	c_rotation_matrix = glm::rotate(glm::mat4(1.0f), glm::radians(c_xrot), glm::vec3(1.0f,0.0f,0.0f));
-	c_rotation_matrix = glm::rotate(c_rotation_matrix, glm::radians(c_yrot), glm::vec3(0.0f,1.0f,0.0f));
-	c_rotation_matrix = glm::rotate(c_rotation_matrix, glm::radians(c_zrot), glm::vec3(0.0f,0.0f,1.0f));
+	projection_matrix = loadCameras();
 
-	glm::vec4 c_pos = glm::vec4(c_xpos,c_ypos,c_zpos, 1.0)*c_rotation_matrix;
-	glm::vec4 c_up = glm::vec4(c_up_x,c_up_y,c_up_z, 1.0)*c_rotation_matrix;
-	lookat_matrix = glm::lookAt(glm::vec3(c_pos),glm::vec3(0.0),glm::vec3(c_up));
+	c_rotation_matrix = glm::rotate(glm::mat4(1.0f), glm::radians(curr_camera->rotation.x), glm::vec3(1.0f,0.0f,0.0f));
+	c_rotation_matrix = glm::rotate(c_rotation_matrix, glm::radians(curr_camera->rotation.y), glm::vec3(0.0f,1.0f,0.0f));
+	c_rotation_matrix = glm::rotate(c_rotation_matrix, glm::radians(curr_camera->rotation.z), glm::vec3(0.0f,0.0f,1.0f));
 
-	projection_matrix = glm::frustum(-1.0, 1.0, -1.0, 1.0, 10.0, 500.0);
+	glm::vec4 c_pos = glm::vec4(curr_camera->position, 1.0) * c_rotation_matrix;
+	glm::vec4 c_up = glm::vec4(curr_camera->up, 1.0) * c_rotation_matrix;
+	lookat_matrix = glm::lookAt(glm::vec3(c_pos), curr_camera->lookat_pt, glm::vec3(c_up));
 
 	view_matrix = projection_matrix * lookat_matrix;
 

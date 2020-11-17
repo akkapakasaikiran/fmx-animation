@@ -41,7 +41,7 @@ namespace csX75	 {
 
 		void update_matrices();
 
-	  public:
+	public:
 		HNode (HNode*, GLuint, glm::vec4*, std::size_t, glm::vec4);
 
 		void add_child(HNode*);
@@ -60,6 +60,7 @@ namespace csX75	 {
 		void dec_tx();
 		void dec_ty();
 		void dec_tz();
+		glm::mat4 get_transformation();
 	};
 
 	glm::mat4* multiply_stack(std::vector <glm::mat4> );

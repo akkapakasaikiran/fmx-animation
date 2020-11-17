@@ -164,11 +164,15 @@ namespace csX75
 		glm::mat4* mult;
 		mult = new glm::mat4(1.0f);
 	
-		for(int i=0;i<matStack.size();i++){
+		for(int i = 0; i < matStack.size(); i++){
 			*mult = (*mult) * matStack[i];
 		}	
 
 		return mult;
+	}
+
+	glm::mat4 HNode::get_transformation(){
+		return translation * rotation * pre_rotation_translation;
 	}
 
 }
