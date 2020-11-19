@@ -2,13 +2,15 @@
 
 #include <iostream>
 
-extern GLuint vPosition,vColor,uModelViewMatrix;
+extern GLuint vPosition,vColor,vNormal,uModelViewMatrix, viewMatrix, normalMatrix;
 extern std::vector<glm::mat4> matrixStack;
+extern glm::mat3 normal_matrix;
+extern glm::mat4 view_matrix;
 
 namespace csX75
 {
 
-	HNode::HNode(HNode* a_parent, GLuint num_v, glm::vec4* posns_arr, std::size_t v_size, glm::vec4 col){
+	HNode::HNode(HNode* a_parent, GLuint num_v, glm::vec4* posns_arr, std::size_t v_size, glm::vec4 col, glm::vec4* normals_arr){
 		num_vertices = num_v;
 		vertex_buffer_size = v_size;
 		color = col;
@@ -32,6 +34,7 @@ namespace csX75
 		glBufferData(GL_ARRAY_BUFFER, vertex_buffer_size + vertex_buffer_size, NULL, GL_STATIC_DRAW);
 		glBufferSubData(GL_ARRAY_BUFFER, 0, vertex_buffer_size, posns_arr);
 		glBufferSubData(GL_ARRAY_BUFFER, vertex_buffer_size, vertex_buffer_size, colors_arr);
+		glBufferSubData(GL_ARRAY_BUFFER, 2*vertex_buffer_size, vertex_buffer_size, normals_arr);
 
 		// Setup the vertex array as per the shader
 		glEnableVertexAttribArray(vPosition);
@@ -39,6 +42,9 @@ namespace csX75
 
 		glEnableVertexAttribArray(vColor);
 		glVertexAttribPointer(vColor, 4, GL_FLOAT, GL_FALSE, 0, BUFFER_OFFSET(vertex_buffer_size));
+
+		glEnableVertexAttribArray(vNormal);
+		glVertexAttribPointer(vNormal, 4, GL_FLOAT, GL_FALSE, 0, BUFFER_OFFSET(2*vertex_buffer_size));
 
 		// Set parent
 		if(a_parent == NULL)
@@ -92,6 +98,17 @@ namespace csX75
 		*ms_mult = (*ms_mult) * scaling;
 
 		glUniformMatrix4fv(uModelViewMatrix, 1, GL_FALSE, glm::value_ptr(*ms_mult));
+		normal_matrix = glm::transpose (glm::inverse(glm::mat3(*ms_mult)));
+		glUniformMatrix3fv(normalMatrix, 1, GL_FALSE, glm::value_ptr(normal_matrix));
+		glm::vec3 v = glm::vec3(0.0, 0.0, 1.0);
+		v = normal_matrix * v;
+		std::cout<<v.x<<" "<<v.y<<" "<<v.z<<"\n";
+		glm::vec3 n = glm::normalize(glm::vec3(v));
+		glm::vec4 lightPos = glm::vec4(10.0, 20.0, 30.0, 0.0);
+  		glm::vec3 lightDir = glm::vec3(view_matrix * lightPos);  // Transforms with camera
+  		lightDir = glm::normalize( glm::vec3(lightDir));
+  		float dotProduct = glm::dot(n, lightDir);
+  		std::cout<<dotProduct<<"\n";
 		glBindVertexArray(vao);
 		glDrawArrays(GL_TRIANGLES, 0, num_vertices);
 		// delete ms_mult;

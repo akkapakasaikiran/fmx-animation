@@ -42,6 +42,7 @@ namespace csX75	 {
 		void update_matrices();
 
 	public:
+		HNode (HNode*, GLuint, glm::vec4*, std::size_t, glm::vec4, glm::vec4*);
 		HNode (HNode*, GLuint, glm::vec4*, std::size_t, glm::vec4);
 
 		void add_child(HNode*);

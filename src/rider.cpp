@@ -9,8 +9,12 @@ glm::mat4 lookat_matrix;
 glm::mat4 model_matrix;
 glm::mat4 view_matrix;
 glm::mat4 modelview_matrix;
+glm::mat3 normal_matrix;
+
 
 GLuint uModelViewMatrix;
+GLuint viewMatrix;
+GLuint normalMatrix;
 const int num_vertices = 36;
 
 //////////////////////////////////////////////////////////////////////////////////////////
@@ -44,25 +48,35 @@ void cube_coords(glm::vec4* positions){
 }
 
 // Makes a square face using positions 
-void quad(int a, int b, int c, int d, int i, glm::vec4* posns_arr, glm::vec4* positions)
+void quad(int a, int b, int c, int d, int i, glm::vec4* normals_arr, glm::vec4* posns_arr, glm::vec4* positions)
 {
-	posns_arr[i] = positions[a]; i++;
-	posns_arr[i] = positions[b]; i++;
-	posns_arr[i] = positions[c]; i++;
-	posns_arr[i] = positions[a]; i++;
-	posns_arr[i] = positions[c]; i++;
-	posns_arr[i] = positions[d]; i++;
+
+	glm::vec3 v1=glm::vec3(positions[b].x - positions[a].x, positions[b].y - positions[a].y, positions[b].z - positions[a].z);
+	glm::vec3 v2=glm::vec3(positions[c].x - positions[a].x, positions[c].y - positions[a].y, positions[c].z - positions[a].z);
+
+	glm::vec3 norml=glm::cross(v1,v2);
+	//glm::vec3 norml=glm::cross(v2,v1);
+	glm::vec4 normal=glm::vec4(norml.x, norml.y, norml.z, 1.0);
+
+	//std::cout<<normal.x<<" "<<normal.y<<" "<<normal.z<<"\n";
+
+	posns_arr[i] = positions[a]; normals_arr[i] = normal; i++;
+	posns_arr[i] = positions[b]; normals_arr[i] = normal; i++;
+	posns_arr[i] = positions[c]; normals_arr[i] = normal; i++;
+	posns_arr[i] = positions[a]; normals_arr[i] = normal; i++;
+	posns_arr[i] = positions[c]; normals_arr[i] = normal; i++;
+	posns_arr[i] = positions[d]; normals_arr[i] = normal; i++;
 }
 
-void initcube(glm::vec4* posns_arr, glm::vec4* positions, int sz){ // sz is always 36
+void initcube(glm::vec4* normals_arr, glm::vec4* posns_arr, glm::vec4* positions, int sz){ // sz is always 36
 	int i = 0;
 	// Making six faces of the cube
-	quad(1, 0, 3, 2, i, posns_arr, positions); i += sz/6;
-	quad(2, 3, 7, 6, i, posns_arr, positions); i += sz/6;
-	quad(3, 0, 4, 7, i, posns_arr, positions); i += sz/6;
-	quad(6, 5, 1, 2, i, posns_arr, positions); i += sz/6;
-	quad(4, 5, 6, 7, i, posns_arr, positions); i += sz/6;
-	quad(5, 4, 0, 1, i, posns_arr, positions); i += sz/6;
+	quad(1, 0, 3, 2, i, normals_arr, posns_arr, positions); i += sz/6;
+	quad(2, 3, 7, 6, i, normals_arr, posns_arr, positions); i += sz/6;
+	quad(3, 0, 4, 7, i, normals_arr, posns_arr, positions); i += sz/6;
+	quad(6, 5, 1, 2, i, normals_arr, posns_arr, positions); i += sz/6;
+	quad(4, 5, 6, 7, i, normals_arr, posns_arr, positions); i += sz/6;
+	quad(5, 4, 0, 1, i, normals_arr, posns_arr, positions); i += sz/6;
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////
@@ -70,8 +84,8 @@ void initcube(glm::vec4* posns_arr, glm::vec4* positions, int sz){ // sz is alwa
 void initBuffersGL(void)
 {
 	// Load shaders and use the resulting shader program
-	std::string vertex_shader_file("shaders/07_vshader.glsl");
-	std::string fragment_shader_file("shaders/07_fshader.glsl");
+	std::string vertex_shader_file("shaders/05_vshader.glsl");
+	std::string fragment_shader_file("shaders/05_fshader.glsl");
 
 	std::vector<GLuint> shaderList;
 	shaderList.push_back(csX75::LoadShaderGL(GL_VERTEX_SHADER, vertex_shader_file));
@@ -83,50 +97,54 @@ void initBuffersGL(void)
 	// Get the attributes from the shader program
 	vPosition = glGetAttribLocation(shaderProgram, "vPosition");
 	vColor = glGetAttribLocation(shaderProgram, "vColor"); 
+	vNormal = glGetAttribLocation( shaderProgram, "vNormal" ); 
 	uModelViewMatrix = glGetUniformLocation(shaderProgram, "uModelViewMatrix");
+	normalMatrix =  glGetUniformLocation( shaderProgram, "normalMatrix");
+  	viewMatrix = glGetUniformLocation( shaderProgram, "viewMatrix");
 
 	glm::vec4 positions[8];
 	cube_coords(positions);
 	glm::vec4 posns_arr[36];
-	initcube(posns_arr, positions, 36);
+	glm::vec4 normals_arr[36];
+	initcube(normals_arr, posns_arr, positions, 36);
 
 	double rscale = 1;
 	glm::vec4 red(1,0,0,0), sepia(0.8,0.5,0.3,0), blue(0.1,0.9,0.1,0);
 
-	nodes["hip"] = new csX75::HNode(nodes["root"], 36, posns_arr, sizeof(posns_arr), red);
+	nodes["hip"] = new csX75::HNode(nodes["root"], 36, posns_arr, sizeof(posns_arr), red, normals_arr);
 	nodes["hip"]->change_parameters(-1.5,0.25,1.5, 0,0,0, 0,0,0, 0,0,0);
 
-	nodes["torso"] = new csX75::HNode(nodes["hip"], 36, posns_arr, sizeof(posns_arr), red);
+	nodes["torso"] = new csX75::HNode(nodes["hip"], 36, posns_arr, sizeof(posns_arr), red, normals_arr);
 	nodes["torso"]->change_parameters(0,0,0, 0,0,0, rscale*1.5,rscale*2,rscale*0.5, 0,rscale*2,0);
 
-	nodes["neck"] = new csX75::HNode(nodes["torso"], 36, posns_arr, sizeof(posns_arr), sepia);
+	nodes["neck"] = new csX75::HNode(nodes["torso"], 36, posns_arr, sizeof(posns_arr), sepia, normals_arr);
 	nodes["neck"]->change_parameters(0,rscale*2.5,0, 0,0,0, rscale*0.5,rscale*0.5,rscale*0.5, 0,0,0);
 	
-	nodes["head"] = new csX75::HNode(nodes["neck"], 36, posns_arr, sizeof(posns_arr), sepia);
+	nodes["head"] = new csX75::HNode(nodes["neck"], 36, posns_arr, sizeof(posns_arr), sepia, normals_arr);
 	nodes["head"]->change_parameters(0,0,0, 0,0,0, rscale*1,rscale*1,rscale*0.5, 0,rscale*1.5,0);
 
-	nodes["lupper_arm"] = new csX75::HNode(nodes["torso"], 36, posns_arr, sizeof(posns_arr), red);
+	nodes["lupper_arm"] = new csX75::HNode(nodes["torso"], 36, posns_arr, sizeof(posns_arr), red, normals_arr);
 	nodes["lupper_arm"]->change_parameters(rscale*-1.5,rscale*1.5,0, 0,0,0, rscale*1,rscale*0.5,rscale*0.5, rscale*-1,0,0);
 
-	nodes["llower_arm"] = new csX75::HNode(nodes["lupper_arm"], 36, posns_arr, sizeof(posns_arr), sepia);
+	nodes["llower_arm"] = new csX75::HNode(nodes["lupper_arm"], 36, posns_arr, sizeof(posns_arr), sepia, normals_arr);
 	nodes["llower_arm"]->change_parameters(rscale*-1,0,0, 0,0,0, rscale*1,rscale*0.5,rscale*0.5, rscale*-1,0,0);
 
-	nodes["rupper_arm"] = new csX75::HNode(nodes["torso"], 36, posns_arr, sizeof(posns_arr), red);
+	nodes["rupper_arm"] = new csX75::HNode(nodes["torso"], 36, posns_arr, sizeof(posns_arr), red, normals_arr);
 	nodes["rupper_arm"]->change_parameters(rscale*1.5,rscale*1.5,0, 0,0,0, rscale*1,rscale*0.5,rscale*0.5, rscale*1,0,0);
 
-	nodes["rlower_arm"] = new csX75::HNode(nodes["rupper_arm"], 36, posns_arr, sizeof(posns_arr), sepia);
+	nodes["rlower_arm"] = new csX75::HNode(nodes["rupper_arm"], 36, posns_arr, sizeof(posns_arr), sepia, normals_arr);
 	nodes["rlower_arm"]->change_parameters(rscale*1,0,0, 0,0,0, rscale*1,rscale*0.5,rscale*0.5, rscale*1,0,0);
 
-	nodes["lupper_leg"] = new csX75::HNode(nodes["hip"], 36, posns_arr, sizeof(posns_arr), glm::vec4(0,0,1,0));
+	nodes["lupper_leg"] = new csX75::HNode(nodes["hip"], 36, posns_arr, sizeof(posns_arr), glm::vec4(0,0,1,0), normals_arr);
 	nodes["lupper_leg"]->change_parameters(rscale*-1,0,0, 0,0,0, rscale*0.5,rscale*1,rscale*0.5, 0,rscale*-1,0);
 
-	nodes["llower_leg"] = new csX75::HNode(nodes["lupper_leg"], 36, posns_arr, sizeof(posns_arr), glm::vec4(0,0,1,0));
+	nodes["llower_leg"] = new csX75::HNode(nodes["lupper_leg"], 36, posns_arr, sizeof(posns_arr), glm::vec4(0,0,1,0), normals_arr);
 	nodes["llower_leg"]->change_parameters(0,rscale*-1,0, 0,0,0, rscale*0.5,rscale*1,rscale*0.5, 0,rscale*-1,0);
 	
-	nodes["rupper_leg"] = new csX75::HNode(nodes["hip"], 36, posns_arr, sizeof(posns_arr), glm::vec4(0,0,1,0));
+	nodes["rupper_leg"] = new csX75::HNode(nodes["hip"], 36, posns_arr, sizeof(posns_arr), glm::vec4(0,0,1,0), normals_arr);
 	nodes["rupper_leg"]->change_parameters(rscale*1,0,0, 0,0,0, rscale*0.5,rscale*1,rscale*0.5, 0,rscale*-1,0);
 
-	nodes["rlower_leg"] = new csX75::HNode(nodes["rupper_leg"], 36, posns_arr, sizeof(posns_arr), glm::vec4(0,0,1,0));
+	nodes["rlower_leg"] = new csX75::HNode(nodes["rupper_leg"], 36, posns_arr, sizeof(posns_arr), glm::vec4(0,0,1,0), normals_arr);
 	nodes["rlower_leg"]->change_parameters(0,rscale*-1,0, 0,0,0, rscale*0.5,rscale*1,rscale*0.5, 0,rscale*-1,0);
 	root_node = curr_node = nodes["hip"];
 }
@@ -148,9 +166,11 @@ void renderGL(void)
 	lookat_matrix = glm::lookAt(glm::vec3(c_pos),glm::vec3(0.0),glm::vec3(c_up));
 
 	//creating the projection matrix
-	projection_matrix = glm::frustum(-1.0, 1.0, -1.0, 1.0, 10.0, 500.0);
+	projection_matrix = glm::frustum(-1.0, 1.0, -1.0, 1.0, 1.0, 500.0);
 
 	view_matrix = projection_matrix * lookat_matrix;
+
+	glUniformMatrix4fv(viewMatrix, 1, GL_FALSE, glm::value_ptr(view_matrix));
 
 	matrixStack.push_back(view_matrix);
 
