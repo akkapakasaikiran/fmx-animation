@@ -14,6 +14,7 @@ glm::mat3 normal_matrix;
 GLuint MVP;
 GLuint ModelviewMatrix;
 GLuint normalMatrix;
+GLuint headlight;
 
 //////////////////////////////////////////////////////////////////////////////////////////
 
@@ -223,6 +224,8 @@ void initBuffersGL(void)
 	MVP = glGetUniformLocation(shaderProgram, "MVP");
 	normalMatrix =  glGetUniformLocation( shaderProgram, "normalMatrix");
   	ModelviewMatrix = glGetUniformLocation( shaderProgram, "ModelviewMatrix");
+  	light_stat = glGetUniformLocation( shaderProgram, "light_stat");
+  	headlight = glGetUniformLocation( shaderProgram, "headlight");
 
 
 	int num_vertices = 60;
@@ -551,6 +554,12 @@ glm::mat4 loadCameras(void){
 	//std::cout<<glm::to_string(posn)<<glm::to_string(lookat_pt)<<"\n";
 
 	cameras["go_pro"] = new csX75::Camera(posn, rot, up, lookat_pt);
+
+	mult = nodes["root"]->get_transformation();
+	mult *= nodes["engine"]->get_transformation();
+	mult *= nodes["frontlight"]->get_transformation();
+	posn = glm::vec3(mult * glm::vec4(0.0, 0.0, 0.0, 1.0)); //position of the headlight
+	glUniform4fv(light_stat, 1, glm::value_ptr(posn));
 
 	// camera_num is defined in common.hpp 
 	if(camera_num == 0){

@@ -2,8 +2,9 @@
 
 #include <iostream>
 
-extern GLuint vPosition,vColor,vNormal,MVP, ModelviewMatrix, normalMatrix;
+extern GLuint vPosition,vColor,vNormal,MVP, ModelviewMatrix, normalMatrix, light_stat;
 extern std::vector<glm::mat4> matrixStack, matrixStack1;
+extern glm::vec4 light_status;
 extern glm::mat3 normal_matrix;
 extern glm::mat4 view_matrix;
 
@@ -31,6 +32,7 @@ namespace csX75
 		glBindBuffer(GL_ARRAY_BUFFER, vbo);
 
 		// Populate the VBO using arrays
+
 		glBufferData(GL_ARRAY_BUFFER, vertex_buffer_size + vertex_buffer_size + vertex_buffer_size, NULL, GL_STATIC_DRAW);
 		glBufferSubData(GL_ARRAY_BUFFER, 0, vertex_buffer_size, posns_arr);
 		glBufferSubData(GL_ARRAY_BUFFER, vertex_buffer_size, vertex_buffer_size, colors_arr);
@@ -104,6 +106,7 @@ namespace csX75
 		normal_matrix = glm::transpose (glm::inverse(glm::mat3(*ms_mult1)));
 		glUniformMatrix3fv(normalMatrix, 1, GL_FALSE, glm::value_ptr(normal_matrix));
 		glUniformMatrix4fv(ModelviewMatrix, 1, GL_FALSE, glm::value_ptr(*ms_mult1));
+		glUniform4fv(light_stat, 1, glm::value_ptr(light_status));
 		/*glm::vec3 v = glm::vec3(0.0, 0.0, 1.0);
 		v = normal_matrix * v;
 		std::cout<<v.x<<" "<<v.y<<" "<<v.z<<"\n";

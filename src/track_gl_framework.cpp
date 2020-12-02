@@ -4,6 +4,7 @@
 #include <map>
 
 extern GLfloat c_xrot,c_yrot,c_zrot,c_xpos,c_ypos,c_zpos;
+extern glm::vec4 light_status;
 extern bool enable_perspective;
 extern csX75::HNode* curr_node;
 extern std::map<std::string, csX75::HNode*> nodes;
@@ -160,6 +161,24 @@ namespace csX75
 
 		else if(key == GLFW_KEY_Z && action == GLFW_PRESS){
 			camera_num = (camera_num + 1) % 3;
+		}
+
+		// Light Controls
+		else if(key == GLFW_KEY_L && action == GLFW_PRESS){
+			//std::cout<<light_status[0]<<" "<<light_status[1]<<" "<<light_status[2]<<" "<<light_status[3]<<"\n";
+			if(light_status[0]==1.0)
+				light_status[0]=0.0;
+			else
+				light_status[0]=1.0;
+			//std::cout<<light_status[0]<<" "<<light_status[1]<<" "<<light_status[2]<<" "<<light_status[3]<<"\n";
+		}
+		else if(key == GLFW_KEY_K && action == GLFW_PRESS){
+			//std::cout<<light_status[0]<<" "<<light_status[1]<<" "<<light_status[2]<<" "<<light_status[3]<<"\n";
+			if(light_status[2]==1.0)
+				light_status[2]=0.0;
+			else
+				light_status[2]=1.0;
+			//std::cout<<light_status[0]<<" "<<light_status[1]<<" "<<light_status[2]<<" "<<light_status[3]<<"\n";
 		}
 	}
 };  
