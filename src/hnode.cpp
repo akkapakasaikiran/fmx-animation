@@ -2,8 +2,8 @@
 
 #include <iostream>
 
-extern GLuint vPosition,vColor,vNormal,uModelViewMatrix, viewMatrix, normalMatrix;
-extern std::vector<glm::mat4> matrixStack;
+extern GLuint vPosition,vColor,vNormal,MVP, ModelviewMatrix, normalMatrix;
+extern std::vector<glm::mat4> matrixStack, matrixStack1;
 extern glm::mat3 normal_matrix;
 extern glm::mat4 view_matrix;
 
@@ -31,7 +31,7 @@ namespace csX75
 		glBindBuffer(GL_ARRAY_BUFFER, vbo);
 
 		// Populate the VBO using arrays
-		glBufferData(GL_ARRAY_BUFFER, vertex_buffer_size + vertex_buffer_size, NULL, GL_STATIC_DRAW);
+		glBufferData(GL_ARRAY_BUFFER, vertex_buffer_size + vertex_buffer_size + vertex_buffer_size, NULL, GL_STATIC_DRAW);
 		glBufferSubData(GL_ARRAY_BUFFER, 0, vertex_buffer_size, posns_arr);
 		glBufferSubData(GL_ARRAY_BUFFER, vertex_buffer_size, vertex_buffer_size, colors_arr);
 		glBufferSubData(GL_ARRAY_BUFFER, 2*vertex_buffer_size, vertex_buffer_size, normals_arr);
@@ -97,10 +97,14 @@ namespace csX75
 		glm::mat4* ms_mult = multiply_stack(matrixStack);
 		*ms_mult = (*ms_mult) * scaling;
 
-		glUniformMatrix4fv(uModelViewMatrix, 1, GL_FALSE, glm::value_ptr(*ms_mult));
-		normal_matrix = glm::transpose (glm::inverse(glm::mat3(*ms_mult)));
+		glm::mat4* ms_mult1 = multiply_stack(matrixStack1);
+		*ms_mult1 = (*ms_mult1) * scaling;
+
+		glUniformMatrix4fv(MVP, 1, GL_FALSE, glm::value_ptr(*ms_mult));
+		normal_matrix = glm::transpose (glm::inverse(glm::mat3(*ms_mult1)));
 		glUniformMatrix3fv(normalMatrix, 1, GL_FALSE, glm::value_ptr(normal_matrix));
-		glm::vec3 v = glm::vec3(0.0, 0.0, 1.0);
+		glUniformMatrix4fv(ModelviewMatrix, 1, GL_FALSE, glm::value_ptr(*ms_mult1));
+		/*glm::vec3 v = glm::vec3(0.0, 0.0, 1.0);
 		v = normal_matrix * v;
 		std::cout<<v.x<<" "<<v.y<<" "<<v.z<<"\n";
 		glm::vec3 n = glm::normalize(glm::vec3(v));
@@ -108,7 +112,7 @@ namespace csX75
   		glm::vec3 lightDir = glm::vec3(view_matrix * lightPos);  // Transforms with camera
   		lightDir = glm::normalize( glm::vec3(lightDir));
   		float dotProduct = glm::dot(n, lightDir);
-  		std::cout<<dotProduct<<"\n";
+  		std::cout<<dotProduct<<"\n";*/
 		glBindVertexArray(vao);
 		glDrawArrays(GL_TRIANGLES, 0, num_vertices);
 		// delete ms_mult;
@@ -119,6 +123,10 @@ namespace csX75
 		matrixStack.push_back(rotation);
 		matrixStack.push_back(pre_rotation_translation);
 
+		matrixStack1.push_back(translation);
+		matrixStack1.push_back(rotation);
+		matrixStack1.push_back(pre_rotation_translation);
+
 		render();
 		for(int i=0;i<children.size();i++)
 			children[i]->render_tree();
@@ -126,6 +134,10 @@ namespace csX75
 		matrixStack.pop_back();
 		matrixStack.pop_back();
 		matrixStack.pop_back();
+
+		matrixStack1.pop_back();
+		matrixStack1.pop_back();
+		matrixStack1.pop_back();
 	}
 
 	void HNode::inc_rx(){

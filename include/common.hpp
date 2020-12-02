@@ -24,8 +24,8 @@
 #include "camera.hpp"
 
 // Camera position and rotation Parameters
-//GLfloat c_xpos = -50.0, c_ypos = 30.0, c_zpos = 40.0;
-GLfloat c_xpos = 0.0, c_ypos = 0.0, c_zpos = 20.0;
+GLfloat c_xpos = -50.0, c_ypos = 30.0, c_zpos = 40.0;
+//GLfloat c_xpos = 0.0, c_ypos = 0.0, c_zpos = 50.0;
 GLfloat c_up_x = 0.0, c_up_y = 1.0, c_up_z = 0.0;
 GLfloat c_xrot = 0.0, c_yrot = 0.0, c_zrot = 0.0;
 
@@ -39,6 +39,8 @@ GLuint vPosition, vColor, vNormal;
 
 //global matrix stack for hierarchical modelling
 std::vector<glm::mat4> matrixStack;
+
+std::vector<glm::mat4> matrixStack1;
 
 csX75::HNode* root_node;
 csX75::HNode* curr_node;

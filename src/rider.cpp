@@ -12,8 +12,8 @@ glm::mat4 modelview_matrix;
 glm::mat3 normal_matrix;
 
 
-GLuint uModelViewMatrix;
-GLuint viewMatrix;
+GLuint MVP;
+GLuint ModelviewMatrix;
 GLuint normalMatrix;
 const int num_vertices = 36;
 
@@ -98,9 +98,9 @@ void initBuffersGL(void)
 	vPosition = glGetAttribLocation(shaderProgram, "vPosition");
 	vColor = glGetAttribLocation(shaderProgram, "vColor"); 
 	vNormal = glGetAttribLocation( shaderProgram, "vNormal" ); 
-	uModelViewMatrix = glGetUniformLocation(shaderProgram, "uModelViewMatrix");
+	MVP = glGetUniformLocation(shaderProgram, "MVP");
 	normalMatrix =  glGetUniformLocation( shaderProgram, "normalMatrix");
-  	viewMatrix = glGetUniformLocation( shaderProgram, "viewMatrix");
+  	ModelviewMatrix = glGetUniformLocation( shaderProgram, "ModelviewMatrix");
 
 	glm::vec4 positions[8];
 	cube_coords(positions);
@@ -154,6 +154,7 @@ void renderGL(void)
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 	matrixStack.clear();
+	matrixStack1.clear();
 
 	//Creating the lookat and the up vectors for the camera
 	c_rotation_matrix = glm::rotate(glm::mat4(1.0f), glm::radians(c_xrot), glm::vec3(1.0f,0.0f,0.0f));
@@ -170,9 +171,8 @@ void renderGL(void)
 
 	view_matrix = projection_matrix * lookat_matrix;
 
-	glUniformMatrix4fv(viewMatrix, 1, GL_FALSE, glm::value_ptr(view_matrix));
-
 	matrixStack.push_back(view_matrix);
+	matrixStack1.push_back(lookat_matrix);
 
 	root_node->render_tree();
 }
