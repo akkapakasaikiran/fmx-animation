@@ -1,4 +1,6 @@
 #include "common.hpp"
+#include<unistd.h>
+#include<fstream>
 
 GLuint shaderProgram;
 
@@ -527,10 +529,10 @@ void initBuffersGL(void)
 
 glm::mat4 loadCameras(void){
 
-	glm::vec3 posn(-50.0, 30.0, 40.0);
+	glm::vec3 posn(c_xpos, c_ypos, c_zpos);
 	// glm::vec3 posn(0.0, 0.0, 50.0);
-	glm::vec3 rot(0.0, 0.0, 0.0);
-	glm::vec3 up(0.0, 1.0, 0.0);
+	glm::vec3 rot(c_xrot, c_yrot, c_zrot);
+	glm::vec3 up(c_up_x, c_up_y, c_up_z);
 	glm::vec3 lookat_pt(0.0, 0.0, 0.0);
 	
 	cameras["global"] = new csX75::Camera(posn, rot, up, lookat_pt);
@@ -671,6 +673,87 @@ int main(int argc, char** argv)
 		
 		// Poll for and process events
 		glfwPollEvents();
+
+		if(mode){
+			int count=0; // number of keyframes read
+			std::ifstream fs;
+			fs.open("keyframes.txt");
+			int t;
+
+			while(fs>>t){
+				count++;
+
+				//std::cout << "Timestamp : " << t << "\n";
+
+				fs >> camera_num;
+				//std::cout << "Camera Number : " << camera_num << "\n";
+
+				fs >> c_xpos;
+				fs >> c_ypos;
+				fs >> c_zpos;
+				fs >> c_xrot;
+				fs >> c_yrot;
+				fs >> c_zrot;
+				fs >> c_up_x;
+				fs >> c_up_y;
+				fs >> c_up_z;
+
+				fs >> light_status[0];
+				fs >> light_status[1];
+				fs >> light_status[2];
+				fs >> light_status[3];
+
+				std::map<std::string, csX75::HNode*>::iterator itr = nodes.begin();
+
+				for(itr;itr != nodes.end(); itr++){
+					//std::cout<<itr->first<<"\n";
+					//std::cout<<itr->second->tx<<"\n";
+					//std::cout<<itr->second->ty<<"\n";
+					//std::cout<<itr->second->tz<<"\n";
+
+					GLfloat tx1,ty1,tz1;
+					GLfloat rx1,ry1,rz1;
+					GLfloat sx1,sy1,sz1;
+					GLfloat pre_rot_x1,pre_rot_y1,pre_rot_z1;
+
+					fs >> tx1;
+					fs >> ty1;
+					fs >> tz1;
+
+					fs >> rx1;
+					fs >> ry1;
+					fs >> rz1;
+
+					fs >> sx1;
+					fs >> sy1;
+					fs >> sz1;
+
+					fs >> pre_rot_x1;
+					fs >> pre_rot_y1;
+					fs >> pre_rot_z1;
+
+					itr->second->change_parameters(tx1,ty1,tz1, rx1,ry1,rz1, sx1,sy1,sz1, pre_rot_x1,pre_rot_y1,pre_rot_z1);
+				}
+
+				if(fs.eof()){
+    				//std::cout << "[EoF reached]\n";
+    				break;
+				}
+
+				renderGL();
+				glfwSwapBuffers(window);
+				//unistd::usleep(1000);
+				//emulate sleep
+				long long int local=0;
+				while(local<1e8)
+					local++;
+				std::cout<<"hi\n";
+			}
+
+			fs.close();
+			std::cout << "Keyframes counted : " << count << "\n";
+			mode=false;
+		}
 	}
 
 	glfwTerminate();

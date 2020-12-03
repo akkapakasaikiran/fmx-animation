@@ -2,13 +2,16 @@
 #include "hnode.hpp"
 #include "camera.hpp"
 #include <map>
+#include <fstream>
 
-extern GLfloat c_xrot,c_yrot,c_zrot,c_xpos,c_ypos,c_zpos;
+extern GLfloat c_xrot,c_yrot,c_zrot,c_xpos,c_ypos,c_zpos, c_up_x, c_up_y, c_up_z;
 extern glm::vec4 light_status;
-extern bool enable_perspective;
+extern bool enable_perspective, mode;
 extern csX75::HNode* curr_node;
 extern std::map<std::string, csX75::HNode*> nodes;
 extern int camera_num;
+
+int time_stamp=0;
 
 namespace csX75
 {
@@ -164,7 +167,7 @@ namespace csX75
 		}
 
 		// Light Controls
-		else if(key == GLFW_KEY_L && action == GLFW_PRESS){
+		else if(key == GLFW_KEY_K && action == GLFW_PRESS){
 			//std::cout<<light_status[0]<<" "<<light_status[1]<<" "<<light_status[2]<<" "<<light_status[3]<<"\n";
 			if(light_status[0]==1.0)
 				light_status[0]=0.0;
@@ -172,13 +175,69 @@ namespace csX75
 				light_status[0]=1.0;
 			//std::cout<<light_status[0]<<" "<<light_status[1]<<" "<<light_status[2]<<" "<<light_status[3]<<"\n";
 		}
-		else if(key == GLFW_KEY_K && action == GLFW_PRESS){
+		else if(key == GLFW_KEY_M && action == GLFW_PRESS){
 			//std::cout<<light_status[0]<<" "<<light_status[1]<<" "<<light_status[2]<<" "<<light_status[3]<<"\n";
 			if(light_status[2]==1.0)
 				light_status[2]=0.0;
 			else
 				light_status[2]=1.0;
 			//std::cout<<light_status[0]<<" "<<light_status[1]<<" "<<light_status[2]<<" "<<light_status[3]<<"\n";
+		}
+		else if(key == GLFW_KEY_S && action == GLFW_PRESS){
+			std::ofstream log;
+			log.open("keyframes.txt", std::ofstream::app);
+
+			log << time_stamp << " ";
+			time_stamp+=10;
+
+			log << camera_num << " ";
+
+			log << c_xpos << " ";
+			log << c_ypos << " ";
+			log << c_zpos << " ";
+			log << c_xrot << " ";
+			log << c_yrot << " ";
+			log << c_zrot << " ";
+			log << c_up_x << " ";
+			log << c_up_y << " ";
+			log << c_up_z << " ";
+
+			log << light_status[0] << " ";
+			log << light_status[1] << " ";
+			log << light_status[2] << " ";
+			log << light_status[3] << " ";
+
+			std::map<std::string, csX75::HNode*>::iterator itr = nodes.begin();
+
+			for(itr;itr != nodes.end(); itr++){
+				//std::cout<<itr->first<<"\n";
+				//std::cout<<itr->second->tx<<"\n";
+				//std::cout<<itr->second->ty<<"\n";
+				//std::cout<<itr->second->tz<<"\n";
+
+				log << itr->second->tx << " ";
+				log << itr->second->ty << " ";
+				log << itr->second->tz << " ";
+
+				log << itr->second->rx << " ";
+				log << itr->second->ry << " ";
+				log << itr->second->rz << " ";
+
+				log << itr->second->sx << " ";
+				log << itr->second->sy << " ";
+				log << itr->second->sz << " ";
+
+				log << itr->second->pre_rot_x << " ";
+				log << itr->second->pre_rot_y << " ";
+				log << itr->second->pre_rot_z << " ";
+			}
+
+			log << "\n";
+
+			log.close();
+		}
+		else if(key == GLFW_KEY_L && action == GLFW_PRESS){
+			mode=true;
 		}
 	}
 };  

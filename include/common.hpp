@@ -49,6 +49,8 @@ std::map<std::string, csX75::HNode*> nodes;
 glm::vec4 light_status = glm::vec4(1.0, 1.0, 1.0, 1.0);
 GLuint light_stat;
 
+bool mode=false;
+
 int camera_num;
 csX75::Camera* curr_camera;
 std::map<std::string, csX75::Camera*> cameras;
