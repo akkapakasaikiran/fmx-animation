@@ -6,7 +6,7 @@
 
 extern GLfloat c_xrot,c_yrot,c_zrot,c_xpos,c_ypos,c_zpos, c_up_x, c_up_y, c_up_z;
 extern glm::vec4 light_status;
-extern bool enable_perspective, mode;
+extern bool enable_perspective, mode, mode1, mode2;
 extern csX75::HNode* curr_node;
 extern std::map<std::string, csX75::HNode*> nodes;
 extern int camera_num;
@@ -49,7 +49,7 @@ namespace csX75
 			glfwSetWindowShouldClose(window, GL_TRUE);
 
 		// choosing the nodes, choosing root selects all 3 
-		else if(key == GLFW_KEY_R && action == GLFW_PRESS)
+		else if(key == GLFW_KEY_U && action == GLFW_PRESS)
 			curr_node = nodes["root"];
 
 		// choosing nodes from the rider
@@ -236,8 +236,14 @@ namespace csX75
 
 			log.close();
 		}
-		else if(key == GLFW_KEY_L && action == GLFW_PRESS){
+		else if(key == GLFW_KEY_P && action == GLFW_PRESS){
 			mode=true;
+		}
+		else if(key == GLFW_KEY_L && action == GLFW_PRESS){
+			mode1=true;
+		}
+		else if(key == GLFW_KEY_R && action == GLFW_PRESS){
+			mode2=true;
 		}
 	}
 };  

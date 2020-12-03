@@ -2,6 +2,15 @@
 #include<unistd.h>
 #include<fstream>
 
+#define STB_IMAGE_IMPLEMENTATION
+#define STBI_ONLY_TGA
+#include "stb_image_read.hpp"
+#define STB_IMAGE_WRITE_IMPLEMENTATION
+#include "stb_image_write.hpp"
+
+
+#include <iostream>
+
 GLuint shaderProgram;
 
 glm::mat4 rotation_matrix;
@@ -409,7 +418,7 @@ void initBuffersGL(void)
 	nodes["hip"] = new csX75::HNode(nodes["root"], 36, posns_arr, sizeof(posns_arr), red, normals_arr);
 	nodes["hip"]->change_parameters(-1.5,0.25,1.5, 0,0,0, 0,0,0, 0,0,0);
 
-	nodes["torso"] = new csX75::HNode(nodes["hip"], 36, posns_arr, sizeof(posns_arr), red, normals_arr);
+	nodes["torso"] = new csX75::HNode(nodes["hip"], 36, posns_arr, sizeof(posns_arr), glm::vec4(0,1,0,0), normals_arr);
 	nodes["torso"]->change_parameters(0,0,0, 0,0,0, rscale*1.5,rscale*2,rscale*0.5, 0,rscale*2,0);
 
 	nodes["neck"] = new csX75::HNode(nodes["torso"], 36, posns_arr, sizeof(posns_arr), sepia, normals_arr);
@@ -626,7 +635,7 @@ int main(int argc, char** argv)
 	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE); 
 
 	//! Create a windowed mode window and its OpenGL context
-	window = glfwCreateWindow(1000, 1000, "FMX Modeling", NULL, NULL);
+	window = glfwCreateWindow(1000, 1000, "FMX Animation", NULL, NULL);
 	if (!window){
 		glfwTerminate();
 		return -1;
@@ -674,85 +683,322 @@ int main(int argc, char** argv)
 		// Poll for and process events
 		glfwPollEvents();
 
-		if(mode){
-			int count=0; // number of keyframes read
+		if(mode || mode1 || mode2){
+			int count=1; // number of keyframes read
 			std::ifstream fs;
 			fs.open("keyframes.txt");
 			int t;
 
+			fs>>t;
+
+			std::map<std::string, csX75::HNode*>::iterator itr = nodes.begin();
+
+			int camera_num1[2];
+			GLfloat c_xpos1[2];
+			GLfloat c_ypos1[2];
+			GLfloat c_zpos1[2];
+			GLfloat c_xrot1[2];
+			GLfloat c_yrot1[2];
+			GLfloat c_zrot1[2];
+			GLfloat c_up_x1[2];
+			GLfloat c_up_y1[2];
+			GLfloat c_up_z1[2];
+
+			glm::vec4 light_status1[2];
+
+			GLfloat helper[2][612];
+
+			fs >> camera_num1[0];
+
+			fs >> c_xpos1[0];
+			fs >> c_ypos1[0];
+			fs >> c_zpos1[0];
+			fs >> c_xrot1[0];
+			fs >> c_yrot1[0];
+			fs >> c_zrot1[0];
+			fs >> c_up_x1[0];
+			fs >> c_up_y1[0];
+			fs >> c_up_z1[0];
+
+			fs >> light_status1[0][0];
+			fs >> light_status1[0][1];
+			fs >> light_status1[0][2];
+			fs >> light_status1[0][3];
+
+			int idx=0;
+
+			for(itr=nodes.begin();itr != nodes.end(); itr++){
+
+				fs >> helper[0][idx];
+				idx++;
+				fs >> helper[0][idx];
+				idx++;
+				fs >> helper[0][idx];
+				idx++;
+
+				fs >> helper[0][idx];
+				idx++;
+				fs >> helper[0][idx];
+				idx++;
+				fs >> helper[0][idx];
+				idx++;
+
+				fs >> helper[0][idx];
+				idx++;
+				fs >> helper[0][idx];
+				idx++;
+				fs >> helper[0][idx];
+				idx++;
+
+				fs >> helper[0][idx];
+				idx++;
+				fs >> helper[0][idx];
+				idx++;
+				fs >> helper[0][idx];
+				idx++;
+			}
+
+
 			while(fs>>t){
 				count++;
 
-				//std::cout << "Timestamp : " << t << "\n";
+				fs >> camera_num1[1];
 
-				fs >> camera_num;
-				//std::cout << "Camera Number : " << camera_num << "\n";
+				fs >> c_xpos1[1];
+				fs >> c_ypos1[1];
+				fs >> c_zpos1[1];
+				fs >> c_xrot1[1];
+				fs >> c_yrot1[1];
+				fs >> c_zrot1[1];
+				fs >> c_up_x1[1];
+				fs >> c_up_y1[1];
+				fs >> c_up_z1[1];
 
-				fs >> c_xpos;
-				fs >> c_ypos;
-				fs >> c_zpos;
-				fs >> c_xrot;
-				fs >> c_yrot;
-				fs >> c_zrot;
-				fs >> c_up_x;
-				fs >> c_up_y;
-				fs >> c_up_z;
+				fs >> light_status1[1][0];
+				fs >> light_status1[1][1];
+				fs >> light_status1[1][2];
+				fs >> light_status1[1][3];
 
-				fs >> light_status[0];
-				fs >> light_status[1];
-				fs >> light_status[2];
-				fs >> light_status[3];
+				idx=0;
 
-				std::map<std::string, csX75::HNode*>::iterator itr = nodes.begin();
+				for(itr=nodes.begin();itr != nodes.end(); itr++){
 
-				for(itr;itr != nodes.end(); itr++){
-					//std::cout<<itr->first<<"\n";
-					//std::cout<<itr->second->tx<<"\n";
-					//std::cout<<itr->second->ty<<"\n";
-					//std::cout<<itr->second->tz<<"\n";
+					fs >> helper[1][idx];
+					idx++;
+					fs >> helper[1][idx];
+					idx++;
+					fs >> helper[1][idx];
+					idx++;
 
-					GLfloat tx1,ty1,tz1;
-					GLfloat rx1,ry1,rz1;
-					GLfloat sx1,sy1,sz1;
-					GLfloat pre_rot_x1,pre_rot_y1,pre_rot_z1;
+					fs >> helper[1][idx];
+					idx++;
+					fs >> helper[1][idx];
+					idx++;
+					fs >> helper[1][idx];
+					idx++;
 
-					fs >> tx1;
-					fs >> ty1;
-					fs >> tz1;
+					fs >> helper[1][idx];
+					idx++;
+					fs >> helper[1][idx];
+					idx++;
+					fs >> helper[1][idx];
+					idx++;
 
-					fs >> rx1;
-					fs >> ry1;
-					fs >> rz1;
-
-					fs >> sx1;
-					fs >> sy1;
-					fs >> sz1;
-
-					fs >> pre_rot_x1;
-					fs >> pre_rot_y1;
-					fs >> pre_rot_z1;
-
-					itr->second->change_parameters(tx1,ty1,tz1, rx1,ry1,rz1, sx1,sy1,sz1, pre_rot_x1,pre_rot_y1,pre_rot_z1);
+					fs >> helper[1][idx];
+					idx++;
+					fs >> helper[1][idx];
+					idx++;
+					fs >> helper[1][idx];
+					idx++;
 				}
 
-				if(fs.eof()){
+				camera_num=camera_num1[0];
+
+				light_status = light_status1[0];
+
+				GLfloat diff_c_xpos = (c_xpos1[1] - c_xpos1[0])/10.0;
+				GLfloat diff_c_ypos = (c_ypos1[1] - c_ypos1[0])/10.0;
+				GLfloat diff_c_zpos = (c_zpos1[1] - c_zpos1[0])/10.0;
+				GLfloat diff_c_xrot = (c_xrot1[1] - c_xrot1[0])/10.0;
+				GLfloat diff_c_yrot = (c_yrot1[1] - c_yrot1[0])/10.0;
+				GLfloat diff_c_zrot = (c_zrot1[1] - c_zrot1[0])/10.0;
+				GLfloat diff_c_up_x = (c_up_x1[1] - c_up_x1[0])/10.0;
+				GLfloat diff_c_up_y = (c_up_y1[1] - c_up_y1[0])/10.0;
+				GLfloat diff_c_up_z = (c_up_z1[1] - c_up_z1[0])/10.0;
+
+				//std::cout<<diff_c_xpos<<" "<<diff_c_ypos<<" "<<diff_c_zpos<<" "<<diff_c_xrot<<" "<<diff_c_yrot<<" "<<diff_c_zrot<<" "<<diff_c_up_x<<" "<<diff_c_up_y<<" "<<diff_c_up_z<<"\n";
+
+				GLfloat diff_helper[612];
+
+				for(idx=0;idx<612;idx++){
+					diff_helper[idx] = (helper[1][idx] - helper[0][idx])/10.0;
+				}
+
+				//if(fs.eof()){
     				//std::cout << "[EoF reached]\n";
-    				break;
+    			//	break;
+				//}
+
+				idx=0;
+
+				for(int i=1;i<=10;i++){
+
+					//std::cout<<i<<"\n";
+					idx=0;
+
+					GLfloat tx1,ty1,tz1,rx1,ry1,rz1,sx1,sy1,sz1,pre_rot_x1,pre_rot_y1,pre_rot_z1;
+
+					if(mode || mode2){
+						c_xpos = c_xpos1[0] + i*diff_c_xpos;
+						c_ypos = c_ypos1[0] + i*diff_c_ypos;
+						c_zpos = c_zpos1[0] + i*diff_c_zpos;
+						c_xrot = c_xrot1[0] + i*diff_c_xrot;
+						c_yrot = c_yrot1[0] + i*diff_c_yrot;
+						c_zrot = c_zrot1[0] + i*diff_c_zrot;
+						c_up_x = c_up_x1[0] + i*diff_c_up_x;
+						c_up_y = c_up_y1[0] + i*diff_c_up_y;
+						c_up_z = c_up_z1[0] + i*diff_c_up_z;
+
+						//std::cout<<c_xpos<<" "<<c_ypos<<" "<<c_zpos<<" "<<c_xrot<<" "<<c_yrot<<" "<<c_zrot<<" "<<c_up_x<<" "<<c_up_y<<" "<<c_up_z<<"\n";
+
+						for(itr=nodes.begin();itr != nodes.end();itr++){
+							tx1 = helper[0][idx] + i*diff_helper[idx];
+							idx++;
+							ty1 = helper[0][idx] + i*diff_helper[idx];
+							idx++;
+							tz1 = helper[0][idx] + i*diff_helper[idx];
+							idx++;
+							rx1 = helper[0][idx] + i*diff_helper[idx];
+							idx++;
+							ry1 = helper[0][idx] + i*diff_helper[idx];
+							idx++;
+							rz1 = helper[0][idx] + i*diff_helper[idx];
+							idx++;
+							sx1 = helper[0][idx] + i*diff_helper[idx];
+							idx++;
+							sy1 = helper[0][idx] + i*diff_helper[idx];
+							idx++;
+							sz1 = helper[0][idx] + i*diff_helper[idx];
+							idx++;
+							pre_rot_x1 = helper[0][idx] + i*diff_helper[idx];
+							idx++;
+							pre_rot_y1 = helper[0][idx] + i*diff_helper[idx];
+							idx++;
+							pre_rot_z1 = helper[0][idx] + i*diff_helper[idx];
+							idx++;
+
+							itr->second->change_parameters(tx1,ty1,tz1,rx1,ry1,rz1,sx1,sy1,sz1,pre_rot_x1,pre_rot_y1,pre_rot_z1);
+						}
+
+						renderGL();
+
+						if(mode2){
+
+							int num_bytes_written = 5;
+
+							//std::string s=std::to_string(num_bytes_written);
+							//std::cout<<s<<"\n";
+							
+							std::string input="a";
+							input=input+".tga";
+							std::string drwfilename=input;
+
+							int width=1000;
+							int height=1000;
+										
+							unsigned char* ustore = new unsigned char[width*height*3];
+
+							glReadBuffer(GL_FRONT);
+							
+							glReadPixels(0, 0, width, height, GL_RGB, GL_UNSIGNED_BYTE, ustore);
+						
+							num_bytes_written = stbi_write_tga( drwfilename.c_str(), width, height, 3, (void*)ustore);
+
+						}
+
+						glfwSwapBuffers(window);
+
+						//emulate sleep
+						//long long int local=0;
+						//while(local<1e8)
+							//local++;
+
+						glfwSetTime(0);
+						while(glfwGetTime()<0.1){}
+					}
 				}
 
-				renderGL();
-				glfwSwapBuffers(window);
-				//unistd::usleep(1000);
-				//emulate sleep
-				long long int local=0;
-				while(local<1e8)
-					local++;
-				std::cout<<"hi\n";
+				camera_num1[0]=camera_num1[1];
+				c_xpos1[0]=c_xpos1[1];
+				c_ypos1[0]=c_ypos1[1];
+				c_zpos1[0]=c_zpos1[1];
+				c_xrot1[0]=c_xrot1[1];
+				c_yrot1[0]=c_yrot1[1];
+				c_zrot1[0]=c_zrot1[1];
+				c_up_x1[0]=c_up_x1[1];
+				c_up_y1[0]=c_up_y1[1];
+				c_up_z1[0]=c_up_z1[1];
+
+				light_status1[0]=light_status1[1];
+
+				for(idx=0;idx<612;idx++){
+					helper[0][idx] = helper[1][idx];
+				}
+			}
+
+			if(count==1 && (mode || mode2)){
+				c_xpos = c_xpos1[0];
+				c_ypos = c_ypos1[0];
+				c_zpos = c_zpos1[0];
+				c_xrot = c_xrot1[0];
+				c_yrot = c_yrot1[0];
+				c_zrot = c_zrot1[0];
+				c_up_x = c_up_x1[0];
+				c_up_y = c_up_y1[0];
+				c_up_z = c_up_z1[0];
+
+				idx=0;
+
+				//std::cout<<c_xpos<<" "<<c_ypos<<" "<<c_zpos<<" "<<c_xrot<<" "<<c_yrot<<" "<<c_zrot<<" "<<c_up_x<<" "<<c_up_y<<" "<<c_up_z<<"\n";
+
+				for(itr=nodes.begin();itr != nodes.end();itr++){
+
+					GLfloat tx1,ty1,tz1,rx1,ry1,rz1,sx1,sy1,sz1,pre_rot_x1,pre_rot_y1,pre_rot_z1;
+
+					tx1 = helper[0][idx];
+					idx++;
+					ty1 = helper[0][idx];
+					idx++;
+					tz1 = helper[0][idx];
+					idx++;
+					rx1 = helper[0][idx];
+					idx++;
+					ry1 = helper[0][idx];
+					idx++;
+					rz1 = helper[0][idx];
+					idx++;
+					sx1 = helper[0][idx];
+					idx++;
+					sy1 = helper[0][idx];
+					idx++;
+					sz1 = helper[0][idx];
+					idx++;
+					pre_rot_x1 = helper[0][idx];
+					idx++;
+					pre_rot_y1 = helper[0][idx];
+					idx++;
+					pre_rot_z1 = helper[0][idx];
+					idx++;
+
+					itr->second->change_parameters(tx1,ty1,tz1,rx1,ry1,rz1,sx1,sy1,sz1,pre_rot_x1,pre_rot_y1,pre_rot_z1);
+				}
 			}
 
 			fs.close();
 			std::cout << "Keyframes counted : " << count << "\n";
 			mode=false;
+			mode1=false;
+			mode2=false;
 		}
 	}
 

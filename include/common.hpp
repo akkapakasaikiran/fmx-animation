@@ -50,6 +50,8 @@ glm::vec4 light_status = glm::vec4(1.0, 1.0, 1.0, 1.0);
 GLuint light_stat;
 
 bool mode=false;
+bool mode1=false;
+bool mode2=false;
 
 int camera_num;
 csX75::Camera* curr_camera;
