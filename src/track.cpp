@@ -758,6 +758,8 @@ int main(int argc, char** argv)
 				idx++;
 			}
 
+			int cnt=0;
+
 
 			while(fs>>t){
 				count++;
@@ -895,24 +897,49 @@ int main(int argc, char** argv)
 						if(mode2){
 
 							int num_bytes_written = 5;
+							int p=5;
 
-							//std::string s=std::to_string(num_bytes_written);
-							//std::cout<<s<<"\n";
+							char arr[5];
+							int p1=0;
+
+							int cnt1=cnt;
+
+							while(cnt1>0){
+								int rem=cnt1%10;
+								cnt1=cnt1/10;
+								arr[p1]=rem+48;
+								p1++;
+								p--;
+							}
+
+							//std::cout<<p<<"\n";
 							
-							std::string input="a";
+							std::string input="frame-";
+
+							for(int l=0;l<p;l++)
+								input=input+'0';
+
+							for(int l=p1-1;l>=0;l--)
+								input=input+arr[l];
+
 							input=input+".tga";
+
+							//std::cout<<input<<"\n";
+
 							std::string drwfilename=input;
 
 							int width=1000;
-							int height=1000;
+							int height=500;
 										
 							unsigned char* ustore = new unsigned char[width*height*3];
 
-							glReadBuffer(GL_FRONT);
+							//glPixelStorei(GL_PACK_ALIGNMENT, 1);
 							
-							glReadPixels(0, 0, width, height, GL_RGB, GL_UNSIGNED_BYTE, ustore);
+							glReadPixels(0, 100, width, height, GL_RGB, GL_UNSIGNED_BYTE, ustore);
 						
 							num_bytes_written = stbi_write_tga( drwfilename.c_str(), width, height, 3, (void*)ustore);
+
+							cnt++;
 
 						}
 
