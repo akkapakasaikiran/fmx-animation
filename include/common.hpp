@@ -8,7 +8,8 @@
 
 #include <vector>
 #include <map>
-
+#include <fstream>
+#include <cstdlib>
 #include "gl_framework.hpp"
 #include "shader_util.hpp"
 #include "glm/vec3.hpp"
@@ -25,7 +26,7 @@
 
 // Camera position and rotation Parameters
 GLfloat c_xpos = -50.0, c_ypos = 30.0, c_zpos = 40.0;
-//GLfloat c_xpos = 0.0, c_ypos = 0.0, c_zpos = 50.0;
+// GLfloat c_xpos = -5.0, c_ypos = 5.0, c_zpos = 5.0;
 GLfloat c_up_x = 0.0, c_up_y = 1.0, c_up_z = 0.0;
 GLfloat c_xrot = 0.0, c_yrot = 0.0, c_zrot = 0.0;
 
@@ -35,7 +36,7 @@ bool enable_culling = true;
 // Running variable to toggle wireframe/solid modelling
 bool solid = true;
 // Shader program attribs
-GLuint vPosition, vColor, vNormal;
+GLuint vPosition, vColor, vNormal, vTexCoord;
 
 //global matrix stack for hierarchical modelling
 std::vector<glm::mat4> matrixStack;
@@ -49,9 +50,9 @@ std::map<std::string, csX75::HNode*> nodes;
 glm::vec4 light_status = glm::vec4(1.0, 1.0, 1.0, 1.0);
 GLuint light_stat;
 
-bool mode=false;
-bool mode1=false;
-bool mode2=false;
+bool mode  = false;
+bool mode1 = false;
+bool mode2 = false;
 
 int camera_num;
 csX75::Camera* curr_camera;

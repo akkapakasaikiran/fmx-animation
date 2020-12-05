@@ -2,7 +2,8 @@
 
 #include <iostream>
 
-extern GLuint vPosition,vColor,vNormal,MVP, ModelviewMatrix, normalMatrix, light_stat;
+extern GLuint vPosition, vColor, vNormal, vTexCoord;
+extern GLuint MVP, ModelviewMatrix, normalMatrix, light_stat;
 extern std::vector<glm::mat4> matrixStack, matrixStack1;
 extern glm::vec4 light_status;
 extern glm::mat3 normal_matrix;
@@ -11,20 +12,28 @@ extern glm::mat4 view_matrix;
 namespace csX75
 {
 
-	HNode::HNode(HNode* a_parent, GLuint num_v, glm::vec4* posns_arr, std::size_t v_size, glm::vec4 col, glm::vec4* normals_arr){
+	HNode::HNode(HNode* a_parent, GLuint num_v, glm::vec4* posns_arr, std::size_t v_size, glm::vec4 col, 
+		glm::vec4* normals_arr, std::string texfilepath, glm::vec2* texcoord_arr)
+	{
 		num_vertices = num_v;
-		vertex_buffer_size = v_size;
 		color = col;
+		using_texture = (texfilepath != "");
 
 		// Construct an array of colors
 		glm::vec4 colors_arr[num_vertices];
 		for(int i = 0; i < num_vertices; i++)
 			colors_arr[i] = color;
 
+		// Assign false values if node is not being texture mappes
+		// Check this in fshader to figure out color
+		if(texcoord_arr == NULL){
+			texcoord_arr = (glm::vec2*) malloc(num_v * sizeof(glm::vec2));
+			for(int i = 0; i < num_v; i++)
+				texcoord_arr[i] = glm::vec2(-1.0, -1.0);
+		}
+
 		// Initialize vao and vbo of the object
-		// Ask GL for a Vertex Array Object (vao)
 		glGenVertexArrays(1, &vao);
-		// Ask GL for aVertex Buffer Object (vbo)
 		glGenBuffers(1, &vbo);
 
 		// Bind them to the current context
@@ -32,21 +41,70 @@ namespace csX75
 		glBindBuffer(GL_ARRAY_BUFFER, vbo);
 
 		// Populate the VBO using arrays
+		glBufferData(GL_ARRAY_BUFFER, (1+1+1+0.5)*v_size, NULL, GL_STATIC_DRAW);
 
-		glBufferData(GL_ARRAY_BUFFER, vertex_buffer_size + vertex_buffer_size + vertex_buffer_size, NULL, GL_STATIC_DRAW);
-		glBufferSubData(GL_ARRAY_BUFFER, 0, vertex_buffer_size, posns_arr);
-		glBufferSubData(GL_ARRAY_BUFFER, vertex_buffer_size, vertex_buffer_size, colors_arr);
-		glBufferSubData(GL_ARRAY_BUFFER, 2*vertex_buffer_size, vertex_buffer_size, normals_arr);
+		glBufferSubData(GL_ARRAY_BUFFER, 0*v_size, v_size, posns_arr);
+		glBufferSubData(GL_ARRAY_BUFFER, 1*v_size, v_size, colors_arr);
+		glBufferSubData(GL_ARRAY_BUFFER, 2*v_size, v_size, normals_arr);
+		glBufferSubData(GL_ARRAY_BUFFER, 3*v_size, 0.5*v_size, texcoord_arr); // 0.5*v_size because vec2 not vec4
 
 		// Setup the vertex array as per the shader
 		glEnableVertexAttribArray(vPosition);
-		glVertexAttribPointer(vPosition, 4, GL_FLOAT, GL_FALSE, 0, BUFFER_OFFSET(0));
-
 		glEnableVertexAttribArray(vColor);
-		glVertexAttribPointer(vColor, 4, GL_FLOAT, GL_FALSE, 0, BUFFER_OFFSET(vertex_buffer_size));
-
 		glEnableVertexAttribArray(vNormal);
-		glVertexAttribPointer(vNormal, 4, GL_FLOAT, GL_FALSE, 0, BUFFER_OFFSET(2*vertex_buffer_size));
+		glEnableVertexAttribArray(vTexCoord);
+
+		glVertexAttribPointer(vPosition, 4, GL_FLOAT, GL_FALSE, 0, BUFFER_OFFSET(0));
+		glVertexAttribPointer(vColor, 4, GL_FLOAT, GL_FALSE, 0, BUFFER_OFFSET(v_size));
+		glVertexAttribPointer(vNormal, 4, GL_FLOAT, GL_FALSE, 0, BUFFER_OFFSET(2*v_size));
+		glVertexAttribPointer(vTexCoord, 2, GL_FLOAT, GL_FALSE, 0, BUFFER_OFFSET(3*v_size));
+
+		// load and create a texture 
+		if(using_texture){
+			glGenTextures(1, &texture);
+			glBindTexture(GL_TEXTURE_2D, texture); // all upcoming GL_TEXTURE_2D operations now have effect on this texture object
+			// set the texture wrapping parameters
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);	// set texture wrapping to GL_REPEAT (default wrapping method)
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+			// set texture filtering parameters
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+
+			unsigned char header[54];// 54 Byte header of BMP
+			int pos;
+			uint w,h, size; // size = w*h*3
+			unsigned char* data; // Data in RGB FORMAT
+			FILE* file = fopen(texfilepath.c_str(), "rb"); 
+			if(file == NULL)
+				std::cout << "File empty\n";
+			if(fread(header, 1, 54, file) != 54)
+				std::cout << "Incorrect BMP file\n";
+
+			// Read MetaData
+			pos = *((int*) &(header[0x0A]));
+			size = *((int*) &(header[0x22]));
+			w = *((int*) &(header[0x12]));
+			h = *((int*) &(header[0x16]));
+
+			//Just in case metadata is missing
+			if(size == 0) size = w*h*3;
+			if(pos == 0) pos = 54;
+
+			data = new unsigned char[size];
+
+			fread(data, size, 1, file); // read the file
+			fclose(file);
+
+			if(data){
+				std::cout << w << " " << h << std::endl;
+				glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, w, h, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
+				glGenerateMipmap(GL_TEXTURE_2D);
+			}
+			else
+				std::cout << "Failed to load texture" << std::endl;
+
+			free(data);	
+		}
 
 		// Set parent
 		if(a_parent == NULL)
@@ -107,18 +165,23 @@ namespace csX75
 		glUniformMatrix3fv(normalMatrix, 1, GL_FALSE, glm::value_ptr(normal_matrix));
 		glUniformMatrix4fv(ModelviewMatrix, 1, GL_FALSE, glm::value_ptr(*ms_mult1));
 		glUniform4fv(light_stat, 1, glm::value_ptr(light_status));
+
 		/*glm::vec3 v = glm::vec3(0.0, 0.0, 1.0);
 		v = normal_matrix * v;
 		std::cout<<v.x<<" "<<v.y<<" "<<v.z<<"\n";
 		glm::vec3 n = glm::normalize(glm::vec3(v));
 		glm::vec4 lightPos = glm::vec4(10.0, 20.0, 30.0, 0.0);
-  		glm::vec3 lightDir = glm::vec3(view_matrix * lightPos);  // Transforms with camera
-  		lightDir = glm::normalize( glm::vec3(lightDir));
-  		float dotProduct = glm::dot(n, lightDir);
-  		std::cout<<dotProduct<<"\n";*/
+		glm::vec3 lightDir = glm::vec3(view_matrix * lightPos);  // Transforms with camera
+		lightDir = glm::normalize( glm::vec3(lightDir));
+		float dotProduct = glm::dot(n, lightDir);
+		std::cout<<dotProduct<<"\n";*/
+
+		// bind Texture
+		if(using_texture)
+        	glBindTexture(GL_TEXTURE_2D, texture);
+
 		glBindVertexArray(vao);
 		glDrawArrays(GL_TRIANGLES, 0, num_vertices);
-		// delete ms_mult;
 	}
 
 	void HNode::render_tree(){

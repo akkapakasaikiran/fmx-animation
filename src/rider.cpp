@@ -1,5 +1,11 @@
 #include "common.hpp"
 
+#define STB_IMAGE_IMPLEMENTATION
+#define STBI_ONLY_TGA
+#include "stb_image_read.hpp"
+#define STB_IMAGE_WRITE_IMPLEMENTATION
+#include "stb_image_write.hpp"
+
 GLuint shaderProgram;
 
 glm::mat4 rotation_matrix;
@@ -19,22 +25,6 @@ const int num_vertices = 36;
 
 //////////////////////////////////////////////////////////////////////////////////////////
 
-// // Returns an array of eight vertices in homogenous coordinates
-// glm::vec4* cube_coords(){
-// 	// static to prevent destruction at end of scope
-// 	static glm::vec4 positions[8] = {
-// 		glm::vec4(-1, -1, 1, 1.0),
-// 		glm::vec4(-1, 1, 1, 1.0),
-// 		glm::vec4(1, 1, 1, 1.0),
-// 		glm::vec4(1, -1, 1, 1.0),
-// 		glm::vec4(-1, -1, -1, 1.0),
-// 		glm::vec4(-1, 1, -1, 1.0),
-// 		glm::vec4(1, 1, -1, 1.0),
-// 		glm::vec4(1, -1, -1, 1.0),
-// 	};
-// 	return positions;
-// }
-
 // Write into positions with an array of eight vertices in homogenous coordinates
 void cube_coords(glm::vec4* positions){
 	positions[0] = glm::vec4(-1, -1, 1, 1.0);
@@ -48,17 +38,14 @@ void cube_coords(glm::vec4* positions){
 }
 
 // Makes a square face using positions 
-void quad(int a, int b, int c, int d, int i, glm::vec4* normals_arr, glm::vec4* posns_arr, glm::vec4* positions)
+void quad(int a, int b, int c, int d, int i, glm::vec4* normals_arr, 
+	glm::vec4* posns_arr, glm::vec2* texcoord_arr, glm::vec4* positions)
 {
-
-	glm::vec3 v1=glm::vec3(positions[b].x - positions[a].x, positions[b].y - positions[a].y, positions[b].z - positions[a].z);
-	glm::vec3 v2=glm::vec3(positions[c].x - positions[a].x, positions[c].y - positions[a].y, positions[c].z - positions[a].z);
-
-	glm::vec3 norml=glm::cross(v1,v2);
-	//glm::vec3 norml=glm::cross(v2,v1);
-	glm::vec4 normal=glm::vec4(norml.x, norml.y, norml.z, 1.0);
-
-	//std::cout<<normal.x<<" "<<normal.y<<" "<<normal.z<<"\n";
+	glm::vec4 posba = positions[b] - positions[a];
+	glm::vec4 posca = positions[c] - positions[a];
+	glm::vec3 v1 = glm::vec3(posba.x, posba.y, posba.z);
+	glm::vec3 v2 = glm::vec3(posca.x, posca.y, posca.z);
+	glm::vec4 normal = glm::vec4(glm::cross(v1, v2), 1.0);
 
 	posns_arr[i] = positions[a]; normals_arr[i] = normal; i++;
 	posns_arr[i] = positions[b]; normals_arr[i] = normal; i++;
@@ -66,17 +53,27 @@ void quad(int a, int b, int c, int d, int i, glm::vec4* normals_arr, glm::vec4* 
 	posns_arr[i] = positions[a]; normals_arr[i] = normal; i++;
 	posns_arr[i] = positions[c]; normals_arr[i] = normal; i++;
 	posns_arr[i] = positions[d]; normals_arr[i] = normal; i++;
+
+	i -= 6;
+	texcoord_arr[i] = glm::vec2(0.0, 1.0); i++;
+	texcoord_arr[i] = glm::vec2(0.0, 0.0); i++;
+	texcoord_arr[i] = glm::vec2(1.0, 0.0); i++;
+	texcoord_arr[i] = glm::vec2(0.0, 1.0); i++;
+	texcoord_arr[i] = glm::vec2(1.0, 0.0); i++;
+	texcoord_arr[i] = glm::vec2(1.0, 1.0); i++;
 }
 
-void initcube(glm::vec4* normals_arr, glm::vec4* posns_arr, glm::vec4* positions, int sz){ // sz is always 36
+void initcube(glm::vec4* normals_arr, glm::vec4* posns_arr, 
+		glm::vec2* texcoord_arr, glm::vec4* positions, int sz) 			// sz is  36
+{ 
 	int i = 0;
 	// Making six faces of the cube
-	quad(1, 0, 3, 2, i, normals_arr, posns_arr, positions); i += sz/6;
-	quad(2, 3, 7, 6, i, normals_arr, posns_arr, positions); i += sz/6;
-	quad(3, 0, 4, 7, i, normals_arr, posns_arr, positions); i += sz/6;
-	quad(6, 5, 1, 2, i, normals_arr, posns_arr, positions); i += sz/6;
-	quad(4, 5, 6, 7, i, normals_arr, posns_arr, positions); i += sz/6;
-	quad(5, 4, 0, 1, i, normals_arr, posns_arr, positions); i += sz/6;
+	quad(1, 0, 3, 2, i, normals_arr, posns_arr, texcoord_arr, positions); i += sz/6;
+	quad(2, 3, 7, 6, i, normals_arr, posns_arr, texcoord_arr, positions); i += sz/6;
+	quad(3, 0, 4, 7, i, normals_arr, posns_arr, texcoord_arr, positions); i += sz/6;
+	quad(6, 5, 1, 2, i, normals_arr, posns_arr, texcoord_arr, positions); i += sz/6;
+	quad(4, 5, 6, 7, i, normals_arr, posns_arr, texcoord_arr, positions); i += sz/6;
+	quad(5, 4, 0, 1, i, normals_arr, posns_arr, texcoord_arr, positions); i += sz/6;
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////
@@ -84,8 +81,8 @@ void initcube(glm::vec4* normals_arr, glm::vec4* posns_arr, glm::vec4* positions
 void initBuffersGL(void)
 {
 	// Load shaders and use the resulting shader program
-	std::string vertex_shader_file("shaders/05_vshader.glsl");
-	std::string fragment_shader_file("shaders/05_fshader.glsl");
+	std::string vertex_shader_file("shaders/rider_vshader.glsl");
+	std::string fragment_shader_file("shaders/rider_fshader.glsl");
 
 	std::vector<GLuint> shaderList;
 	shaderList.push_back(csX75::LoadShaderGL(GL_VERTEX_SHADER, vertex_shader_file));
@@ -97,16 +94,19 @@ void initBuffersGL(void)
 	// Get the attributes from the shader program
 	vPosition = glGetAttribLocation(shaderProgram, "vPosition");
 	vColor = glGetAttribLocation(shaderProgram, "vColor"); 
-	vNormal = glGetAttribLocation( shaderProgram, "vNormal" ); 
+	vNormal = glGetAttribLocation(shaderProgram, "vNormal");
+	vTexCoord = glGetAttribLocation(shaderProgram, "vTexCoord");
+
 	MVP = glGetUniformLocation(shaderProgram, "MVP");
-	normalMatrix =  glGetUniformLocation( shaderProgram, "normalMatrix");
-  	ModelviewMatrix = glGetUniformLocation( shaderProgram, "ModelviewMatrix");
+	normalMatrix =  glGetUniformLocation(shaderProgram, "normalMatrix");
+  	ModelviewMatrix = glGetUniformLocation(shaderProgram, "ModelviewMatrix");
 
 	glm::vec4 positions[8];
 	cube_coords(positions);
 	glm::vec4 posns_arr[36];
 	glm::vec4 normals_arr[36];
-	initcube(normals_arr, posns_arr, positions, 36);
+	glm::vec2 texcoord_arr[36];
+	initcube(normals_arr, posns_arr, texcoord_arr, positions, 36);
 
 	double rscale = 1;
 	glm::vec4 red(1,0,0,0), sepia(0.8,0.5,0.3,0), blue(0.1,0.9,0.1,0);
@@ -114,7 +114,7 @@ void initBuffersGL(void)
 	nodes["hip"] = new csX75::HNode(nodes["root"], 36, posns_arr, sizeof(posns_arr), red, normals_arr);
 	nodes["hip"]->change_parameters(-1.5,0.25,1.5, 0,0,0, 0,0,0, 0,0,0);
 
-	nodes["torso"] = new csX75::HNode(nodes["hip"], 36, posns_arr, sizeof(posns_arr), red, normals_arr);
+	nodes["torso"] = new csX75::HNode(nodes["hip"], 36, posns_arr, sizeof(posns_arr), red, normals_arr, "textures/all1.bmp", texcoord_arr);
 	nodes["torso"]->change_parameters(0,0,0, 0,0,0, rscale*1.5,rscale*2,rscale*0.5, 0,rscale*2,0);
 
 	nodes["neck"] = new csX75::HNode(nodes["torso"], 36, posns_arr, sizeof(posns_arr), sepia, normals_arr);

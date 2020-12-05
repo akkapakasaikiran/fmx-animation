@@ -1,6 +1,7 @@
 #include "common.hpp"
-#include<unistd.h>
-#include<fstream>
+#include <unistd.h>
+#include <fstream>
+#include <iostream>
 
 #define STB_IMAGE_IMPLEMENTATION
 #define STBI_ONLY_TGA
@@ -8,8 +9,6 @@
 #define STB_IMAGE_WRITE_IMPLEMENTATION
 #include "stb_image_write.hpp"
 
-
-#include <iostream>
 
 GLuint shaderProgram;
 
@@ -218,8 +217,8 @@ void laplacian_points(glm::vec4* posns, int num_pts, double x, int mult){
 void initBuffersGL(void)
 {
 	// Load shaders and use the resulting shader program
-	std::string vertex_shader_file("shaders/05_vshader.glsl");
-	std::string fragment_shader_file("shaders/05_fshader.glsl");
+	std::string vertex_shader_file("shaders/track_vshader.glsl");
+	std::string fragment_shader_file("shaders/track_fshader.glsl");
 
 	std::vector<GLuint> shaderList;
 	shaderList.push_back(csX75::LoadShaderGL(GL_VERTEX_SHADER, vertex_shader_file));
@@ -231,12 +230,14 @@ void initBuffersGL(void)
 	// Get the attributes from the shader program
 	vPosition = glGetAttribLocation(shaderProgram, "vPosition");
 	vColor = glGetAttribLocation(shaderProgram, "vColor"); 
-	vNormal = glGetAttribLocation( shaderProgram, "vNormal" ); 
+	vNormal = glGetAttribLocation(shaderProgram, "vNormal"); 
+	// vTexCoord = glGetAttribLocation(shaderProgram, "vTexCoord");
+
 	MVP = glGetUniformLocation(shaderProgram, "MVP");
-	normalMatrix =  glGetUniformLocation( shaderProgram, "normalMatrix");
-  	ModelviewMatrix = glGetUniformLocation( shaderProgram, "ModelviewMatrix");
-  	light_stat = glGetUniformLocation( shaderProgram, "light_stat");
-  	headlight = glGetUniformLocation( shaderProgram, "headlight");
+	normalMatrix =  glGetUniformLocation(shaderProgram, "normalMatrix");
+  	ModelviewMatrix = glGetUniformLocation(shaderProgram, "ModelviewMatrix");
+  	light_stat = glGetUniformLocation(shaderProgram, "light_stat");
+  	headlight = glGetUniformLocation(shaderProgram, "headlight");
 
 
 	int num_vertices = 60;

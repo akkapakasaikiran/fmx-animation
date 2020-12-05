@@ -17,15 +17,11 @@ namespace csX75	 {
 
 	// A simple class that represents a node in the hierarchy tree
 	class HNode {
-		//GLfloat tx,ty,tz,rx,ry,rz,sx,sy,sz;
-
-		//GLfloat pre_rot_x,pre_rot_y,pre_rot_z;
-
-		std::size_t vertex_buffer_size;
-		std::size_t color_buffer_size;
-
 		GLuint num_vertices;
-		GLuint vao,vbo;
+		GLuint vao, vbo;
+
+		bool using_texture;
+		uint texture;
 
 		std::string name;
 
@@ -47,7 +43,7 @@ namespace csX75	 {
 
 		GLfloat pre_rot_x,pre_rot_y,pre_rot_z;
 
-		HNode (HNode*, GLuint, glm::vec4*, std::size_t, glm::vec4, glm::vec4*);
+		HNode (HNode*, GLuint, glm::vec4*, std::size_t, glm::vec4, glm::vec4*, std::string = "", glm::vec2* = NULL);
 		HNode (HNode*, GLuint, glm::vec4*, std::size_t, glm::vec4);
 
 		void add_child(HNode*);
