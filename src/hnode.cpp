@@ -110,14 +110,12 @@ namespace csX75
 			// unsigned char* data = src.data();
 
 			if(data){
-				// std::cout << w << " " << h << std::endl;
+				std::cout << w << " " << h << std::endl;
 				glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, w, h, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
 				glGenerateMipmap(GL_TEXTURE_2D);
 			}
-			else{
-				// std::cout << stbi_failure_reason() << std::endl;
+			else
 				std::cout << "Failed to load texture" << std::endl;
-			}
 
 			free(data);	
 		}
@@ -181,16 +179,6 @@ namespace csX75
 		glUniformMatrix3fv(normalMatrix, 1, GL_FALSE, glm::value_ptr(normal_matrix));
 		glUniformMatrix4fv(ModelviewMatrix, 1, GL_FALSE, glm::value_ptr(*ms_mult1));
 		glUniform4fv(light_stat, 1, glm::value_ptr(light_status));
-
-		/*glm::vec3 v = glm::vec3(0.0, 0.0, 1.0);
-		v = normal_matrix * v;
-		std::cout<<v.x<<" "<<v.y<<" "<<v.z<<"\n";
-		glm::vec3 n = glm::normalize(glm::vec3(v));
-		glm::vec4 lightPos = glm::vec4(10.0, 20.0, 30.0, 0.0);
-		glm::vec3 lightDir = glm::vec3(view_matrix * lightPos);  // Transforms with camera
-		lightDir = glm::normalize( glm::vec3(lightDir));
-		float dotProduct = glm::dot(n, lightDir);
-		std::cout<<dotProduct<<"\n";*/
 
 		// bind Texture
 		if(using_texture)
