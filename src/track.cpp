@@ -41,15 +41,14 @@ void cube_coords(glm::vec4* positions){
 }
 
 // Makes a square face using positions 
-void quad(int a, int b, int c, int d, int i, glm::vec4* normals_arr, glm::vec4* posns_arr, glm::vec4* positions)
+void quad(int a, int b, int c, int d, int i, glm::vec4* normals_arr, 
+	glm::vec4* posns_arr, glm::vec2* texcoord_arr, glm::vec4* positions)
 {
-
-	glm::vec3 v1=glm::vec3(positions[b].x - positions[a].x, positions[b].y - positions[a].y, positions[b].z - positions[a].z);
-	glm::vec3 v2=glm::vec3(positions[c].x - positions[a].x, positions[c].y - positions[a].y, positions[c].z - positions[a].z);
-
-	glm::vec3 norml=glm::cross(v1,v2);
-	//glm::vec3 norml=glm::cross(v2,v1);
-	glm::vec4 normal=glm::vec4(norml.x, norml.y, norml.z, 1.0);
+	glm::vec4 posba = positions[b] - positions[a];
+	glm::vec4 posca = positions[c] - positions[a];
+	glm::vec3 v1 = glm::vec3(posba.x, posba.y, posba.z);
+	glm::vec3 v2 = glm::vec3(posca.x, posca.y, posca.z);
+	glm::vec4 normal = glm::vec4(glm::cross(v1, v2), 1.0);
 
 	posns_arr[i] = positions[a]; normals_arr[i] = normal; i++;
 	posns_arr[i] = positions[b]; normals_arr[i] = normal; i++;
@@ -57,17 +56,27 @@ void quad(int a, int b, int c, int d, int i, glm::vec4* normals_arr, glm::vec4* 
 	posns_arr[i] = positions[a]; normals_arr[i] = normal; i++;
 	posns_arr[i] = positions[c]; normals_arr[i] = normal; i++;
 	posns_arr[i] = positions[d]; normals_arr[i] = normal; i++;
+
+	i -= 6;
+	texcoord_arr[i] = glm::vec2(0.0, 1.0); i++;
+	texcoord_arr[i] = glm::vec2(0.0, 0.0); i++;
+	texcoord_arr[i] = glm::vec2(1.0, 0.0); i++;
+	texcoord_arr[i] = glm::vec2(0.0, 1.0); i++;
+	texcoord_arr[i] = glm::vec2(1.0, 0.0); i++;
+	texcoord_arr[i] = glm::vec2(1.0, 1.0); i++;
 }
 
-void initcube(glm::vec4* normals_arr, glm::vec4* posns_arr, glm::vec4* positions, int sz){ // sz is always 36
+void initcube(glm::vec4* normals_arr, glm::vec4* posns_arr, 
+		glm::vec2* texcoord_arr, glm::vec4* positions, int sz) 			// sz is  36
+{ 
 	int i = 0;
 	// Making six faces of the cube
-	quad(1, 0, 3, 2, i, normals_arr, posns_arr, positions); i += sz/6;
-	quad(2, 3, 7, 6, i, normals_arr, posns_arr, positions); i += sz/6;
-	quad(3, 0, 4, 7, i, normals_arr, posns_arr, positions); i += sz/6;
-	quad(6, 5, 1, 2, i, normals_arr, posns_arr, positions); i += sz/6;
-	quad(4, 5, 6, 7, i, normals_arr, posns_arr, positions); i += sz/6;
-	quad(5, 4, 0, 1, i, normals_arr, posns_arr, positions); i += sz/6;
+	quad(1, 0, 3, 2, i, normals_arr, posns_arr, texcoord_arr, positions); i += sz/6;
+	quad(2, 3, 7, 6, i, normals_arr, posns_arr, texcoord_arr, positions); i += sz/6;
+	quad(3, 0, 4, 7, i, normals_arr, posns_arr, texcoord_arr, positions); i += sz/6;
+	quad(6, 5, 1, 2, i, normals_arr, posns_arr, texcoord_arr, positions); i += sz/6;
+	quad(4, 5, 6, 7, i, normals_arr, posns_arr, texcoord_arr, positions); i += sz/6;
+	quad(5, 4, 0, 1, i, normals_arr, posns_arr, texcoord_arr, positions); i += sz/6;
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////
@@ -80,14 +89,12 @@ void circle_points(glm::vec4* posns, int num_pts, double r, double z){
 }
 
 // Constructs a square given four points and puts it in vertices 
-void square(glm::vec4* normals_arr, glm::vec4* vertices, glm::vec4 a, glm::vec4 b, glm::vec4 c, glm::vec4 d, int i){
+void square(glm::vec4* normals_arr, glm::vec4* vertices, 
+		glm::vec4 a, glm::vec4 b, glm::vec4 c, glm::vec4 d, int i, glm::vec2* texcoords = NULL){
 
-	glm::vec3 v1=glm::vec3(b.x - a.x, b.y - a.y, b.z - a.z);
-	glm::vec3 v2=glm::vec3(c.x - a.x, c.y - a.y, c.z - a.z);
-
-	//glm::vec3 norml=glm::cross(v1,v2);
-	glm::vec3 norml=glm::cross(v2,v1);
-	glm::vec4 normal=glm::vec4(norml.x, norml.y, norml.z, 1.0);
+	glm::vec3 v1 = glm::vec3(b.x - a.x, b.y - a.y, b.z - a.z);
+	glm::vec3 v2 = glm::vec3(c.x - a.x, c.y - a.y, c.z - a.z);
+	glm::vec4 normal = glm::vec4(glm::cross(v2, v1), 1.0);
 
 	normals_arr[i] = normal; vertices[i++] = a;
 	normals_arr[i] = normal; vertices[i++] = b;
@@ -95,6 +102,16 @@ void square(glm::vec4* normals_arr, glm::vec4* vertices, glm::vec4 a, glm::vec4 
 	normals_arr[i] = normal; vertices[i++] = a; 
 	normals_arr[i] = normal; vertices[i++] = c; 
 	normals_arr[i] = normal; vertices[i++] = d; 
+
+	if(texcoords != NULL){
+		i -= 6;
+		texcoords[i] = glm::vec2(0.0, 1.0); i++;
+		texcoords[i] = glm::vec2(0.0, 0.0); i++;
+		texcoords[i] = glm::vec2(1.0, 0.0); i++;
+		texcoords[i] = glm::vec2(0.0, 1.0); i++;
+		texcoords[i] = glm::vec2(1.0, 0.0); i++;
+		texcoords[i] = glm::vec2(1.0, 1.0); i++;	
+	}
 }
 
 // Fill vertices with a mesh for the curved surface formed by two parallel circles
@@ -147,27 +164,26 @@ void quad_coords(glm::vec4* positions){
 	positions[3] = glm::vec4(-5, 5, 0, 1.0);
 }
 
-void rectangle(glm::vec4* normals_arr, glm::vec4* vertices, int num_vertices){
+void rectangle(glm::vec4* normals_arr, glm::vec4* vertices, glm::vec2* texcoords, int num_vertices){
 	double divisions = num_vertices/6.0;
 
 	double x_l = -0.5;
-	double x_r = 0.5;
-	double z_l = 0;
-	double z_r = 0;
+	double x_r =  0.5;
+	double z_l =  0.0;
+	double z_r =  0.0;
 
 	double diff_z = 3.0/divisions;
 
 	glm::vec4 positions[4];
 
-	for(int i=0;i<num_vertices;i+=6){
-		//std::cout<<"hi\n";
+	for(int i = 0; i < num_vertices; i += 6){
 		positions[0] = glm::vec4(x_l, 0, z_r, 1.0);
 		positions[1] = glm::vec4(x_r, 0, z_l, 1.0);
-		z_l = z_l + diff_z;
-		z_r = z_r + diff_z;
+		z_l += diff_z;
+		z_r += diff_z;
 		positions[2] = glm::vec4(x_r, 0, z_l, 1.0);
 		positions[3] = glm::vec4(x_l, 0, z_r, 1.0);
-		square(normals_arr, vertices, positions[0], positions[1], positions[2], positions[3], i);
+		square(normals_arr, vertices, positions[0], positions[1], positions[2], positions[3], i, texcoords);
 	}
 }
 
@@ -204,7 +220,7 @@ void laplacian_points(glm::vec4* posns, int num_pts, double x, int mult){
 		z = z + (0.1*mult);
 
 		int sign=-1;
-		if(z>0)
+		if(z > 0)
 			sign=1;
 
 		posns[i] = glm::vec4(x, glm::exp(-4*z*sign), z, 1.0);
@@ -231,7 +247,7 @@ void initBuffersGL(void)
 	vPosition = glGetAttribLocation(shaderProgram, "vPosition");
 	vColor = glGetAttribLocation(shaderProgram, "vColor"); 
 	vNormal = glGetAttribLocation(shaderProgram, "vNormal"); 
-	// vTexCoord = glGetAttribLocation(shaderProgram, "vTexCoord");
+	vTexCoord = glGetAttribLocation(shaderProgram, "vTexCoord");
 
 	MVP = glGetUniformLocation(shaderProgram, "MVP");
 	normalMatrix =  glGetUniformLocation(shaderProgram, "normalMatrix");
@@ -244,8 +260,9 @@ void initBuffersGL(void)
 
 	glm::vec4 vertices[num_vertices];
 	glm::vec4 normals[num_vertices];
+	glm::vec2 texcoords[num_vertices];
 
-	rectangle(normals, vertices,num_vertices);
+	rectangle(normals, vertices, texcoords, num_vertices);
 
 /////////////////////////////////////////////////////////////////////////////////////////////
 	// Main Root, a dummy node
@@ -326,7 +343,7 @@ void initBuffersGL(void)
 
 	// Hierarchical Model
 
-	nodes["rect1"] = new csX75::HNode(nodes["root"], 60, vertices , sizeof(vertices), glm::vec4(1,0,0,0), normals);
+	nodes["rect1"] = new csX75::HNode(nodes["root"], 60, vertices , sizeof(vertices), glm::vec4(1,0,0,0), normals, "textures/small_barbara.bmp", texcoords);
 	nodes["rect1"]->change_parameters(-1.5,0,0, 0,0,0, 1,1,1, 0,0,0);
 
 	nodes["semicircle"] = new csX75::HNode(nodes["rect1"], 120, semicircle , sizeof(semicircle), glm::vec4(1,0,0,0), semicircle_normals);
@@ -409,17 +426,18 @@ void initBuffersGL(void)
 	cube_coords(positions);
 	glm::vec4 posns_arr[36];
 	glm::vec4 normals_arr[36];
-	initcube(normals_arr, posns_arr, positions, 36);
+	glm::vec2 texcoord_arr[36];
+	initcube(normals_arr, posns_arr, texcoord_arr, positions, 36);
 
 	double rscale = 0.045;
-	glm::vec4 red(1,0,0,0), sepia(0.8,0.5,0.3,0), blue(0.1,0.9,0.1,0);
+	glm::vec4 red(1,0,0,0), sepia(0.8,0.5,0.3,0), blue(0.1,0.9,0.1,0), green(0,1,0,0);
 
 	// Hierarchical Model
 
 	nodes["hip"] = new csX75::HNode(nodes["root"], 36, posns_arr, sizeof(posns_arr), red, normals_arr);
 	nodes["hip"]->change_parameters(-1.5,0.25,1.5, 0,0,0, 0,0,0, 0,0,0);
 
-	nodes["torso"] = new csX75::HNode(nodes["hip"], 36, posns_arr, sizeof(posns_arr), glm::vec4(0,1,0,0), normals_arr);
+	nodes["torso"] = new csX75::HNode(nodes["hip"], 36, posns_arr, sizeof(posns_arr), green, normals_arr, "textures/all1.bmp", texcoord_arr);
 	nodes["torso"]->change_parameters(0,0,0, 0,0,0, rscale*1.5,rscale*2,rscale*0.5, 0,rscale*2,0);
 
 	nodes["neck"] = new csX75::HNode(nodes["torso"], 36, posns_arr, sizeof(posns_arr), sepia, normals_arr);
@@ -504,7 +522,7 @@ void initBuffersGL(void)
 
 	nodes["frontlight"] = new csX75::HNode(nodes["engine"], 36, posns_arr, sizeof(posns_arr), frontlight_color, normals_arr);
 	nodes["frontlight"]->change_parameters(0,bscale*0.5,0, 0,0,25, bscale*0.2,bscale*0.4,bscale*0.4, bscale*3,0,0);
-	nodes["body1"] = new csX75::HNode(nodes["engine"], 36, posns_arr, sizeof(posns_arr), body1_color, normals_arr);
+	nodes["body1"] = new csX75::HNode(nodes["engine"], 36, posns_arr, sizeof(posns_arr), body1_color, normals_arr, "textures/small_barbara.bmp", texcoord_arr);
 	nodes["body1"]->change_parameters(0,bscale*0.5,0, 0,0,25, bscale*1.4,bscale*0.5,bscale*0.5, bscale*1.5,0,0);
 	nodes["body2"] = new csX75::HNode(nodes["engine"], 36, posns_arr, sizeof(posns_arr), seat_color, normals_arr);
 	nodes["body2"]->change_parameters(0,bscale*0.5,0, 0,0,-10, bscale*1.4,bscale*0.45,bscale*0.5, -bscale*1.5,0,0);

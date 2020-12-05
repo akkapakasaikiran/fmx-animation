@@ -30,15 +30,14 @@ void cube_coords(glm::vec4* positions){
 }
 
 // Makes a square face using positions 
-void quad(int a, int b, int c, int d, int i, glm::vec4* normals_arr, glm::vec4* posns_arr, glm::vec4* positions)
+void quad(int a, int b, int c, int d, int i, glm::vec4* normals_arr, 
+	glm::vec4* posns_arr, glm::vec2* texcoord_arr, glm::vec4* positions)
 {
-
-	glm::vec3 v1=glm::vec3(positions[b].x - positions[a].x, positions[b].y - positions[a].y, positions[b].z - positions[a].z);
-	glm::vec3 v2=glm::vec3(positions[c].x - positions[a].x, positions[c].y - positions[a].y, positions[c].z - positions[a].z);
-
-	glm::vec3 norml=glm::cross(v1,v2);
-	//glm::vec3 norml=glm::cross(v2,v1);
-	glm::vec4 normal=glm::vec4(norml.x, norml.y, norml.z, 1.0);
+	glm::vec4 posba = positions[b] - positions[a];
+	glm::vec4 posca = positions[c] - positions[a];
+	glm::vec3 v1 = glm::vec3(posba.x, posba.y, posba.z);
+	glm::vec3 v2 = glm::vec3(posca.x, posca.y, posca.z);
+	glm::vec4 normal = glm::vec4(glm::cross(v1, v2), 1.0);
 
 	posns_arr[i] = positions[a]; normals_arr[i] = normal; i++;
 	posns_arr[i] = positions[b]; normals_arr[i] = normal; i++;
@@ -46,17 +45,27 @@ void quad(int a, int b, int c, int d, int i, glm::vec4* normals_arr, glm::vec4* 
 	posns_arr[i] = positions[a]; normals_arr[i] = normal; i++;
 	posns_arr[i] = positions[c]; normals_arr[i] = normal; i++;
 	posns_arr[i] = positions[d]; normals_arr[i] = normal; i++;
+
+	i -= 6;
+	texcoord_arr[i] = glm::vec2(0.0, 1.0); i++;
+	texcoord_arr[i] = glm::vec2(0.0, 0.0); i++;
+	texcoord_arr[i] = glm::vec2(1.0, 0.0); i++;
+	texcoord_arr[i] = glm::vec2(0.0, 1.0); i++;
+	texcoord_arr[i] = glm::vec2(1.0, 0.0); i++;
+	texcoord_arr[i] = glm::vec2(1.0, 1.0); i++;
 }
 
-void initcube(glm::vec4* normals_arr, glm::vec4* posns_arr, glm::vec4* positions, int sz){ // sz is always 36
+void initcube(glm::vec4* normals_arr, glm::vec4* posns_arr, 
+		glm::vec2* texcoord_arr, glm::vec4* positions, int sz) 			// sz is  36
+{ 
 	int i = 0;
 	// Making six faces of the cube
-	quad(1, 0, 3, 2, i, normals_arr, posns_arr, positions); i += sz/6;
-	quad(2, 3, 7, 6, i, normals_arr, posns_arr, positions); i += sz/6;
-	quad(3, 0, 4, 7, i, normals_arr, posns_arr, positions); i += sz/6;
-	quad(6, 5, 1, 2, i, normals_arr, posns_arr, positions); i += sz/6;
-	quad(4, 5, 6, 7, i, normals_arr, posns_arr, positions); i += sz/6;
-	quad(5, 4, 0, 1, i, normals_arr, posns_arr, positions); i += sz/6;
+	quad(1, 0, 3, 2, i, normals_arr, posns_arr, texcoord_arr, positions); i += sz/6;
+	quad(2, 3, 7, 6, i, normals_arr, posns_arr, texcoord_arr, positions); i += sz/6;
+	quad(3, 0, 4, 7, i, normals_arr, posns_arr, texcoord_arr, positions); i += sz/6;
+	quad(6, 5, 1, 2, i, normals_arr, posns_arr, texcoord_arr, positions); i += sz/6;
+	quad(4, 5, 6, 7, i, normals_arr, posns_arr, texcoord_arr, positions); i += sz/6;
+	quad(5, 4, 0, 1, i, normals_arr, posns_arr, texcoord_arr, positions); i += sz/6;
 }
 
 
@@ -110,8 +119,8 @@ void spokes(glm::vec4* normals_arr, glm::vec4* vertices, glm::vec4* cl, glm::vec
 void initBuffersGL(void)
 {
 	// Load shaders and use the resulting shader program
-	std::string vertex_shader_file("shaders/05_vshader.glsl");
-	std::string fragment_shader_file("shaders/05_fshader.glsl");
+	std::string vertex_shader_file("shaders/rider_vshader.glsl");
+	std::string fragment_shader_file("shaders/rider_fshader.glsl");
 
 	std::vector<GLuint> shaderList;
 	shaderList.push_back(csX75::LoadShaderGL(GL_VERTEX_SHADER, vertex_shader_file));
@@ -123,7 +132,9 @@ void initBuffersGL(void)
 	// Get the attributes from the shader program
 	vPosition = glGetAttribLocation(shaderProgram, "vPosition");
 	vColor = glGetAttribLocation(shaderProgram, "vColor");
-	vNormal = glGetAttribLocation( shaderProgram, "vNormal" ); 
+	vNormal = glGetAttribLocation(shaderProgram, "vNormal");
+	vTexCoord = glGetAttribLocation(shaderProgram, "vTexCoord");
+
 	MVP = glGetUniformLocation(shaderProgram, "MVP");
 	normalMatrix =  glGetUniformLocation( shaderProgram, "normalMatrix");
   	ModelviewMatrix = glGetUniformLocation( shaderProgram, "ModelviewMatrix");
@@ -135,7 +146,8 @@ void initBuffersGL(void)
 	cube_coords(positions);
 	glm::vec4 posns_arr[36];
 	glm::vec4 normals_arr[36];
-	initcube(normals_arr, posns_arr, positions, 36);
+	glm::vec2 texcoord_arr[36];
+	initcube(normals_arr, posns_arr, texcoord_arr, positions, 36);
 
 	int num_bpts = 40;
 	int num_spokes = 5;
@@ -184,7 +196,7 @@ void initBuffersGL(void)
 
 	nodes["frontlight"] = new csX75::HNode(nodes["engine"], 36, posns_arr, sizeof(posns_arr), frontlight_color, normals_arr);
 	nodes["frontlight"]->change_parameters(0,bscale*0.5,0, 0,0,25, bscale*0.2,bscale*0.4,bscale*0.4, bscale*3,0,0);
-	nodes["body1"] = new csX75::HNode(nodes["engine"], 36, posns_arr, sizeof(posns_arr), body1_color, normals_arr);
+	nodes["body1"] = new csX75::HNode(nodes["engine"], 36, posns_arr, sizeof(posns_arr), body1_color, normals_arr, "textures/small_barbara.bmp", texcoord_arr);
 	nodes["body1"]->change_parameters(0,bscale*0.5,0, 0,0,25, bscale*1.4,bscale*0.5,bscale*0.5, bscale*1.5,0,0);
 	nodes["body2"] = new csX75::HNode(nodes["engine"], 36, posns_arr, sizeof(posns_arr), seat_color, normals_arr);
 	nodes["body2"]->change_parameters(0,bscale*0.5,0, 0,0,-10, bscale*1.4,bscale*0.45,bscale*0.5, -bscale*1.5,0,0);

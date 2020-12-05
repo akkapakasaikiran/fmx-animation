@@ -26,7 +26,7 @@
 
 // Camera position and rotation Parameters
 GLfloat c_xpos = -50.0, c_ypos = 30.0, c_zpos = 40.0;
-// GLfloat c_xpos = -5.0, c_ypos = 5.0, c_zpos = 5.0;
+// GLfloat c_xpos = -30.0, c_ypos = 20.0, c_zpos = 15.0;
 GLfloat c_up_x = 0.0, c_up_y = 1.0, c_up_z = 0.0;
 GLfloat c_xrot = 0.0, c_yrot = 0.0, c_zrot = 0.0;
 

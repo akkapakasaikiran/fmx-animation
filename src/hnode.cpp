@@ -1,6 +1,12 @@
 #include "hnode.hpp"
-
 #include <iostream>
+
+// #define STB_IMAGE_IMPLEMENTATION
+// #define STBI_ONLY_TGA
+// #include "stb_image_read.hpp"
+// #define STB_IMAGE_WRITE_IMPLEMENTATION
+// #include "stb_image_write.hpp"
+
 
 extern GLuint vPosition, vColor, vNormal, vTexCoord;
 extern GLuint MVP, ModelviewMatrix, normalMatrix, light_stat;
@@ -68,11 +74,11 @@ namespace csX75
 			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
 			// set texture filtering parameters
 			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
 			unsigned char header[54];// 54 Byte header of BMP
 			int pos;
-			uint w,h, size; // size = w*h*3
+			uint w, h, size; // size = w*h*3
 			unsigned char* data; // Data in RGB FORMAT
 			FILE* file = fopen(texfilepath.c_str(), "rb"); 
 			if(file == NULL)
@@ -95,13 +101,23 @@ namespace csX75
 			fread(data, size, 1, file); // read the file
 			fclose(file);
 
+			// int width, height, nrChannels;
+			// unsigned char *data = stbi_load(texfilepath.c_str(), &width, &height, &nrChannels, 0);
+			
+			// cimg_library::CImg<unsigned char> src(texfilepath.c_str());
+			// int width = src.width();
+			// int height = src.height();
+			// unsigned char* data = src.data();
+
 			if(data){
-				std::cout << w << " " << h << std::endl;
+				// std::cout << w << " " << h << std::endl;
 				glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, w, h, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
 				glGenerateMipmap(GL_TEXTURE_2D);
 			}
-			else
+			else{
+				// std::cout << stbi_failure_reason() << std::endl;
 				std::cout << "Failed to load texture" << std::endl;
+			}
 
 			free(data);	
 		}

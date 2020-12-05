@@ -29,7 +29,7 @@ void main()
 	//Diffuse
 	vec3 n = normalize(vec3(normal));	     
 	float dotProduct = dot(n, lightDir);
-	float intensity =  max( dotProduct, 0.0);
+	float intensity =  max(dotProduct, 0.0);
 
 	// Compute specular component only if light falls on vertex
 	if(intensity > 0.0){
@@ -41,47 +41,12 @@ void main()
 	
 	vec4 tmp_color = COLOR;
 	if(texCoord != vec2(-1.0, -1.0)){
-		tmp_color = texture(Texture, texCoord);
+		tmp_color = texture2D(Texture, texCoord);
 	}
 
-
 	vec4 color;
- // if(light_stat[0] == 1.0){
-		color = (intensity * diffuse + spec + ambient) * tmp_color; 
-	//}
-	//else{
-		//color = ambient;
-	//}
+	color = (intensity * diffuse + spec + ambient) * tmp_color; 
 
-
-
-	// Defining Light 
-	// vec3 lightPos = vec3(0.0, 0.0, 0.0); //in eye coordinates
-	// lightPos = vec3(headlight); //in eye coordinates
-	// lightDir = normalize(vec3(lightPos - eye));
-
-	//Diffuse
-	// n = normalize(vec3(normal));      
-	// dotProduct = dot(n, lightDir);
-	// intensity =  max( dotProduct, 0.0);
-
-	// Compute specular component only if light falls on vertex
-	//if(intensity > 0.0)
-	//{
-		//vec3 v = normalize(-eye.xyz);
-		//vec3 r = reflect(-lightDir, normal);
-		//float intSpec = max(dot(r,v), 0.0); 
-		//spec = specular * pow(intSpec, shininess);
-	//}  
-
-	//if(light_stat[2] == 1.0){
-		//color += (intensity * diffuse + spec + ambient)*COLOR; // All
-	//}
-	//else{
-		//color += ambient;
-	//}
-
-
-	frag_color = color;
+	frag_color = tmp_color;
 	
 }

@@ -6,7 +6,9 @@
 
 ## Declaration
 We hereby declare that this assignment is our own work, and we have not copied it from anywhere. We have taken help from the
-tutorial 7 provided by Prof. Parag Chaudhari for base code. We have also referred to the official website of GLFW and GLM.
+[tutorials](https://github.com/paragchaudhuri/cs475-tutorials) provided by Prof. Parag Chaudhari for a lot of the base code. 
+For shading and texturing, [LearnOpenGL](https://learnopengl.com/Getting-started/) was invaluable and we have importd some code from there as well. 
+We have also referred to the official website of GLFW and GLM.
 
 ## Running the code
 - `make` to compile the neccesary files and create the executable(s) 
