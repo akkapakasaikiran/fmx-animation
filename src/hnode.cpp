@@ -101,16 +101,8 @@ namespace csX75
 			fread(data, size, 1, file); // read the file
 			fclose(file);
 
-			// int width, height, nrChannels;
-			// unsigned char *data = stbi_load(texfilepath.c_str(), &width, &height, &nrChannels, 0);
-			
-			// cimg_library::CImg<unsigned char> src(texfilepath.c_str());
-			// int width = src.width();
-			// int height = src.height();
-			// unsigned char* data = src.data();
-
 			if(data){
-				std::cout << w << " " << h << std::endl;
+				// std::cout << w << " " << h << std::endl;
 				glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, w, h, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
 				glGenerateMipmap(GL_TEXTURE_2D);
 			}

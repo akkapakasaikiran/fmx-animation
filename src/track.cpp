@@ -11,6 +11,7 @@
 
 
 GLuint shaderProgram;
+GLuint skyshaderProgram;
 
 glm::mat4 rotation_matrix;
 glm::mat4 projection_matrix;
@@ -26,7 +27,59 @@ GLuint ModelviewMatrix;
 GLuint normalMatrix;
 GLuint headlight;
 
+// skybox
+GLuint view;
+GLuint projection;
+GLuint cubemapTexture;
+GLuint skyboxVBO, skyboxVAO;
+
+
 //////////////////////////////////////////////////////////////////////////////////////////
+
+float skyboxVertices[] = {
+	// positions          
+	-1.0f,  1.0f, -1.0f,
+	-1.0f, -1.0f, -1.0f,
+	 1.0f, -1.0f, -1.0f,
+	 1.0f, -1.0f, -1.0f,
+	 1.0f,  1.0f, -1.0f,
+	-1.0f,  1.0f, -1.0f,
+
+	-1.0f, -1.0f,  1.0f,
+	-1.0f, -1.0f, -1.0f,
+	-1.0f,  1.0f, -1.0f,
+	-1.0f,  1.0f, -1.0f,
+	-1.0f,  1.0f,  1.0f,
+	-1.0f, -1.0f,  1.0f,
+
+	 1.0f, -1.0f, -1.0f,
+	 1.0f, -1.0f,  1.0f,
+	 1.0f,  1.0f,  1.0f,
+	 1.0f,  1.0f,  1.0f,
+	 1.0f,  1.0f, -1.0f,
+	 1.0f, -1.0f, -1.0f,
+
+	-1.0f, -1.0f,  1.0f,
+	-1.0f,  1.0f,  1.0f,
+	 1.0f,  1.0f,  1.0f,
+	 1.0f,  1.0f,  1.0f,
+	 1.0f, -1.0f,  1.0f,
+	-1.0f, -1.0f,  1.0f,
+
+	-1.0f,  1.0f, -1.0f,
+	 1.0f,  1.0f, -1.0f,
+	 1.0f,  1.0f,  1.0f,
+	 1.0f,  1.0f,  1.0f,
+	-1.0f,  1.0f,  1.0f,
+	-1.0f,  1.0f, -1.0f,
+
+	-1.0f, -1.0f, -1.0f,
+	-1.0f, -1.0f,  1.0f,
+	 1.0f, -1.0f, -1.0f,
+	 1.0f, -1.0f, -1.0f,
+	-1.0f, -1.0f,  1.0f,
+	 1.0f, -1.0f,  1.0f
+};
 
 // Write into positions with an array of eight vertices in homogenous coordinates
 void cube_coords(glm::vec4* positions){
@@ -230,30 +283,117 @@ void laplacian_points(glm::vec4* posns, int num_pts, double x, int mult){
 
 //////////////////////////////////////////////////////////////////////////////////////////
 
-void initBuffersGL(void)
+// Load a BMP image from filepath and write into data
+unsigned char* loadImage(const char* filepath, int &w, int &h)
 {
-	// Load shaders and use the resulting shader program
-	std::string vertex_shader_file("shaders/track_vshader.glsl");
-	std::string fragment_shader_file("shaders/track_fshader.glsl");
+	unsigned char header[54];	// 54 Byte header of BMP
+	int pos;
+	uint size; 	// size = w * h * 3
 
+	FILE* file = fopen(filepath, "rb"); 
+	if(file == NULL)
+		std::cout << "File empty\n";
+	if(fread(header, 1, 54, file) != 54)
+		std::cout << "Incorrect BMP file\n";
+
+	// Read MetaData
+	pos = *((int*) &(header[0x0A]));
+	size = *((int*) &(header[0x22]));
+	w = *((int*) &(header[0x12]));
+	h = *((int*) &(header[0x16]));
+
+	//Just in case metadata is missing
+	if(size == 0) size = w * h * 3;
+	if(pos == 0) pos = 54;
+
+	unsigned char* data = new unsigned char[size];
+
+	fread(data, size, 1, file);	 	// Read the file
+	fclose(file);
+
+	return data;
+}
+
+
+uint loadCubemap(std::string* faces)
+{
+	unsigned int textureID;
+	glGenTextures(1, &textureID);
+	glBindTexture(GL_TEXTURE_CUBE_MAP, textureID);
+
+	int w, h;
+	for (unsigned int i = 0; i < 6; i++){
+		unsigned char *data = loadImage(faces[i].c_str(), w, h);
+		if(data){
+			std::cout << w << " " << h << std::endl;
+			glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 
+						 0, GL_RGB, w, h, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
+		}
+		else
+			std::cout << "Cubemap tex failed to load at path: " << faces[i] << std::endl;
+		free(data);
+	}
+	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
+
+	return textureID;
+}
+
+
+void initBuffersGL()
+{
+
+	// Load scene shaders 
 	std::vector<GLuint> shaderList;
-	shaderList.push_back(csX75::LoadShaderGL(GL_VERTEX_SHADER, vertex_shader_file));
-	shaderList.push_back(csX75::LoadShaderGL(GL_FRAGMENT_SHADER, fragment_shader_file));
-
+	shaderList.push_back(csX75::LoadShaderGL(GL_VERTEX_SHADER, "shaders/track_vshader.glsl"));
+	shaderList.push_back(csX75::LoadShaderGL(GL_FRAGMENT_SHADER, "shaders/track_fshader.glsl"));
 	shaderProgram = csX75::CreateProgramGL(shaderList);
-	glUseProgram(shaderProgram);
+
+	// Load skybox shaders 
+	std::vector<GLuint> skyshaderList;
+	skyshaderList.push_back(csX75::LoadShaderGL(GL_VERTEX_SHADER, "shaders/sky_vshader.glsl"));
+	skyshaderList.push_back(csX75::LoadShaderGL(GL_FRAGMENT_SHADER, "shaders/sky_fshader.glsl"));
+	skyshaderProgram = csX75::CreateProgramGL(skyshaderList);
 
 	// Get the attributes from the shader program
 	vPosition = glGetAttribLocation(shaderProgram, "vPosition");
 	vColor = glGetAttribLocation(shaderProgram, "vColor"); 
 	vNormal = glGetAttribLocation(shaderProgram, "vNormal"); 
 	vTexCoord = glGetAttribLocation(shaderProgram, "vTexCoord");
-
 	MVP = glGetUniformLocation(shaderProgram, "MVP");
 	normalMatrix =  glGetUniformLocation(shaderProgram, "normalMatrix");
   	ModelviewMatrix = glGetUniformLocation(shaderProgram, "ModelviewMatrix");
   	light_stat = glGetUniformLocation(shaderProgram, "light_stat");
   	headlight = glGetUniformLocation(shaderProgram, "headlight");
+
+	// Get the attributes from the shader program
+	vPos = glGetAttribLocation(skyshaderProgram, "vPos");
+	view = glGetUniformLocation(skyshaderProgram, "view");
+	projection = glGetUniformLocation(skyshaderProgram, "projection");
+
+	std::string faces[6] = {
+		"skybox/skybox2/px1.bmp",
+		"skybox/skybox2/nx1.bmp",
+		"skybox/skybox2/ny1.bmp",
+		"skybox/skybox2/py1.bmp",
+		"skybox/skybox2/pz1.bmp",
+		"skybox/skybox2/nz1.bmp"
+	};
+	cubemapTexture = loadCubemap(faces); 
+
+	// skybox VAO and VBO
+	glGenVertexArrays(1, &skyboxVAO);
+	glGenBuffers(1, &skyboxVBO);
+
+	glBindVertexArray(skyboxVAO);
+	glBindBuffer(GL_ARRAY_BUFFER, skyboxVBO);
+
+	glBufferData(GL_ARRAY_BUFFER, sizeof(skyboxVertices), &skyboxVertices, GL_STATIC_DRAW);
+	glEnableVertexAttribArray(vPos);
+	glVertexAttribPointer(vPos, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
 
 
 	int num_vertices = 60;
@@ -551,12 +691,11 @@ void initBuffersGL(void)
 	nodes["fspokes"] = new csX75::HNode(nodes["front_tire"], 6*num_spokes, spokes_arr, sizeof(spokes_arr), spokes_color, spokes_normals);
 	nodes["fspokes"]->change_parameters(0,0,0, 0,0,0, bscale*1.5,bscale*1.5,bscale*0.245, 0,0,0);	
 
-
 }
 
 
-glm::mat4 loadCameras(void){
-
+glm::mat4 loadCameras()
+{
 	glm::vec3 posn(c_xpos, c_ypos, c_zpos);
 	// glm::vec3 posn(0.0, 0.0, 50.0);
 	glm::vec3 rot(c_xrot, c_yrot, c_zrot);
@@ -581,8 +720,6 @@ glm::mat4 loadCameras(void){
 	posn = glm::vec3(mult * glm::vec4(0.0, 0.0, 0.0, 1.0));
 	lookat_pt = glm::vec3(mult * glm::vec4(0.0, 0.0, 1.0, 1.0));
 
-	//std::cout<<glm::to_string(posn)<<glm::to_string(lookat_pt)<<"\n";
-
 	cameras["go_pro"] = new csX75::Camera(posn, rot, up, lookat_pt);
 
 	mult = nodes["root"]->get_transformation();
@@ -602,13 +739,12 @@ glm::mat4 loadCameras(void){
 	}
 	else if(camera_num == 2){
 		curr_camera = cameras["go_pro"];
-		// return glm::ortho(-20.0, 20.0, -20.0, 20.0, -20.0, 20.0); 
 		return glm::frustum(-0.02, 0.02, -0.02, 0.02, 0.025, 10.0);
 	}
 
 }
 
-void renderGL(void)
+void renderGL()
 {
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
@@ -617,9 +753,9 @@ void renderGL(void)
 
 	projection_matrix = loadCameras();
 
-	c_rotation_matrix = glm::rotate(glm::mat4(1.0f), glm::radians(curr_camera->rotation.x), glm::vec3(1.0f,0.0f,0.0f));
-	c_rotation_matrix = glm::rotate(c_rotation_matrix, glm::radians(curr_camera->rotation.y), glm::vec3(0.0f,1.0f,0.0f));
-	c_rotation_matrix = glm::rotate(c_rotation_matrix, glm::radians(curr_camera->rotation.z), glm::vec3(0.0f,0.0f,1.0f));
+	c_rotation_matrix = glm::rotate(glm::mat4(1.0f), glm::radians(curr_camera->rotation.x), glm::vec3(1.0f, 0.0f, 0.0f));
+	c_rotation_matrix = glm::rotate(c_rotation_matrix, glm::radians(curr_camera->rotation.y), glm::vec3(0.0f, 1.0f, 0.0f));
+	c_rotation_matrix = glm::rotate(c_rotation_matrix, glm::radians(curr_camera->rotation.z), glm::vec3(0.0f, 0.0f, 1.0f));
 
 	glm::vec4 c_pos = glm::vec4(curr_camera->position, 1.0) * c_rotation_matrix;
 	glm::vec4 c_up = glm::vec4(curr_camera->up, 1.0) * c_rotation_matrix;
@@ -630,7 +766,24 @@ void renderGL(void)
 	matrixStack.push_back(view_matrix);
 	matrixStack1.push_back(lookat_matrix);
 
+	// draw scene
+	glUseProgram(shaderProgram);
 	root_node->render_tree();
+
+	// draw skybox 
+	glDepthFunc(GL_LEQUAL);  // change depth function so depth test passes when values are equal to depth buffer's content
+	glUseProgram(skyshaderProgram);
+
+	glm::mat4 viewm = glm::mat4(glm::mat3(lookat_matrix)); // remove translation from the view matrix
+
+	glUniformMatrix4fv(view, 1, GL_FALSE, glm::value_ptr(viewm));
+	glUniformMatrix4fv(projection, 1, GL_FALSE, glm::value_ptr(projection_matrix));
+
+	glBindTexture(GL_TEXTURE_CUBE_MAP, cubemapTexture);
+	glBindVertexArray(skyboxVAO);
+	glDrawArrays(GL_TRIANGLES, 0, 36);
+
+	glDepthFunc(GL_LESS); // set depth function back to default
 }
 
 int main(int argc, char** argv)
