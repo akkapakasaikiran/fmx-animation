@@ -175,12 +175,28 @@ namespace csX75
 				light_status[0]=1.0;
 			//std::cout<<light_status[0]<<" "<<light_status[1]<<" "<<light_status[2]<<" "<<light_status[3]<<"\n";
 		}
-		else if(key == GLFW_KEY_M && action == GLFW_PRESS){
+		else if(key == GLFW_KEY_O && action == GLFW_PRESS){
 			//std::cout<<light_status[0]<<" "<<light_status[1]<<" "<<light_status[2]<<" "<<light_status[3]<<"\n";
 			if(light_status[2]==1.0)
 				light_status[2]=0.0;
 			else
 				light_status[2]=1.0;
+			//std::cout<<light_status[0]<<" "<<light_status[1]<<" "<<light_status[2]<<" "<<light_status[3]<<"\n";
+		}
+		else if(key == GLFW_KEY_M && action == GLFW_PRESS){
+			//std::cout<<light_status[0]<<" "<<light_status[1]<<" "<<light_status[2]<<" "<<light_status[3]<<"\n";
+			if(light_status[1]==1.0)
+				light_status[1]=0.0;
+			else
+				light_status[1]=1.0;
+			//std::cout<<light_status[0]<<" "<<light_status[1]<<" "<<light_status[2]<<" "<<light_status[3]<<"\n";
+		}
+		else if(key == GLFW_KEY_Q && action == GLFW_PRESS){
+			//std::cout<<light_status[0]<<" "<<light_status[1]<<" "<<light_status[2]<<" "<<light_status[3]<<"\n";
+			if(light_status[3]==1.0)
+				light_status[3]=0.0;
+			else
+				light_status[3]=1.0;
 			//std::cout<<light_status[0]<<" "<<light_status[1]<<" "<<light_status[2]<<" "<<light_status[3]<<"\n";
 		}
 		else if(key == GLFW_KEY_S && action == GLFW_PRESS){

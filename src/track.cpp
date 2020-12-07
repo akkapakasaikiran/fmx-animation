@@ -26,6 +26,7 @@ GLuint MVP;
 GLuint ModelviewMatrix;
 GLuint normalMatrix;
 GLuint headlight;
+GLuint spotlight;
 
 // skybox
 GLuint view;
@@ -368,6 +369,7 @@ void initBuffersGL()
   	ModelviewMatrix = glGetUniformLocation(shaderProgram, "ModelviewMatrix");
   	light_stat = glGetUniformLocation(shaderProgram, "light_stat");
   	headlight = glGetUniformLocation(shaderProgram, "headlight");
+  	spotlight = glGetUniformLocation(shaderProgram, "spotlight");
 
 	// Get the attributes from the shader program
 	vPos = glGetAttribLocation(skyshaderProgram, "vPos");
@@ -722,12 +724,6 @@ glm::mat4 loadCameras()
 
 	cameras["go_pro"] = new csX75::Camera(posn, rot, up, lookat_pt);
 
-	mult = nodes["root"]->get_transformation();
-	mult *= nodes["engine"]->get_transformation();
-	mult *= nodes["frontlight"]->get_transformation();
-	posn = glm::vec3(mult * glm::vec4(0.0, 0.0, 0.0, 1.0)); //position of the headlight
-	glUniform4fv(light_stat, 1, glm::value_ptr(posn));
-
 	// camera_num is defined in common.hpp 
 	if(camera_num == 0){
 		curr_camera = cameras["global"];
@@ -762,6 +758,18 @@ void renderGL()
 	lookat_matrix = glm::lookAt(glm::vec3(c_pos), curr_camera->lookat_pt, glm::vec3(c_up));
 
 	view_matrix = projection_matrix * lookat_matrix;
+
+	glm::mat4 mult = nodes["root"]->get_transformation();
+	mult *= nodes["engine"]->get_transformation();
+	mult *= nodes["frontlight"]->get_transformation();
+	glm::vec4 posn = lookat_matrix * mult * glm::vec4(0.0, 0.0, 0.0, 1.0); //position of the headlight in view coordinates
+	glUniform4fv(headlight, 1, glm::value_ptr(posn));
+
+	mult = nodes["root"]->get_transformation();
+	mult *= nodes["hip"]->get_transformation();
+	posn = lookat_matrix * glm::vec4(glm::vec3(mult * glm::vec4(0.0,0.0,0.0,1.0)) + glm::vec3(0.0,0.0,5.0), 1.0);
+	//std::cout<<posn[0]<<" "<<posn[1]<<" "<<posn[2]<<" "<<posn[3]<<"\n";
+	glUniform4fv(spotlight, 1, glm::value_ptr(posn));
 
 	matrixStack.push_back(view_matrix);
 	matrixStack1.push_back(lookat_matrix);
@@ -969,6 +977,13 @@ int main(int argc, char** argv)
 					fs >> helper[1][idx];
 					idx++;
 					fs >> helper[1][idx];
+
+					std::string s=itr->first;
+					if(s=="front_tire" || s=="back_tire"){
+						helper[1][idx] = (1-count)*360;
+						//std::cout<<helper[1][idx];
+					}
+
 					idx++;
 
 					fs >> helper[1][idx];
@@ -990,22 +1005,22 @@ int main(int argc, char** argv)
 
 				light_status = light_status1[0];
 
-				GLfloat diff_c_xpos = (c_xpos1[1] - c_xpos1[0])/10.0;
-				GLfloat diff_c_ypos = (c_ypos1[1] - c_ypos1[0])/10.0;
-				GLfloat diff_c_zpos = (c_zpos1[1] - c_zpos1[0])/10.0;
-				GLfloat diff_c_xrot = (c_xrot1[1] - c_xrot1[0])/10.0;
-				GLfloat diff_c_yrot = (c_yrot1[1] - c_yrot1[0])/10.0;
-				GLfloat diff_c_zrot = (c_zrot1[1] - c_zrot1[0])/10.0;
-				GLfloat diff_c_up_x = (c_up_x1[1] - c_up_x1[0])/10.0;
-				GLfloat diff_c_up_y = (c_up_y1[1] - c_up_y1[0])/10.0;
-				GLfloat diff_c_up_z = (c_up_z1[1] - c_up_z1[0])/10.0;
+				GLfloat diff_c_xpos = (c_xpos1[1] - c_xpos1[0])/15.0;
+				GLfloat diff_c_ypos = (c_ypos1[1] - c_ypos1[0])/15.0;
+				GLfloat diff_c_zpos = (c_zpos1[1] - c_zpos1[0])/15.0;
+				GLfloat diff_c_xrot = (c_xrot1[1] - c_xrot1[0])/15.0;
+				GLfloat diff_c_yrot = (c_yrot1[1] - c_yrot1[0])/15.0;
+				GLfloat diff_c_zrot = (c_zrot1[1] - c_zrot1[0])/15.0;
+				GLfloat diff_c_up_x = (c_up_x1[1] - c_up_x1[0])/15.0;
+				GLfloat diff_c_up_y = (c_up_y1[1] - c_up_y1[0])/15.0;
+				GLfloat diff_c_up_z = (c_up_z1[1] - c_up_z1[0])/15.0;
 
 				//std::cout<<diff_c_xpos<<" "<<diff_c_ypos<<" "<<diff_c_zpos<<" "<<diff_c_xrot<<" "<<diff_c_yrot<<" "<<diff_c_zrot<<" "<<diff_c_up_x<<" "<<diff_c_up_y<<" "<<diff_c_up_z<<"\n";
 
 				GLfloat diff_helper[612];
 
 				for(idx=0;idx<612;idx++){
-					diff_helper[idx] = (helper[1][idx] - helper[0][idx])/10.0;
+					diff_helper[idx] = (helper[1][idx] - helper[0][idx])/15.0;
 				}
 
 				//if(fs.eof()){
@@ -1015,7 +1030,7 @@ int main(int argc, char** argv)
 
 				idx=0;
 
-				for(int i=1;i<=10;i++){
+				for(int i=1;i<=15;i++){
 
 					//std::cout<<i<<"\n";
 					idx=0;
@@ -1123,7 +1138,7 @@ int main(int argc, char** argv)
 							//local++;
 
 						glfwSetTime(0);
-						while(glfwGetTime()<0.1){}
+						while(glfwGetTime()<0.067){}
 					}
 				}
 

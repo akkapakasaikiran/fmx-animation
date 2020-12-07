@@ -1,5 +1,6 @@
 #include "hnode.hpp"
 #include <iostream>
+#include<bits/stdc++.h>
 
 // #define STB_IMAGE_IMPLEMENTATION
 // #define STBI_ONLY_TGA
@@ -227,27 +228,27 @@ namespace csX75
 	}
 
 	void HNode::inc_tx(){
-		tx += 0.1; update_matrices();
+		tx += 0.05; update_matrices();
 	}
 
 	void HNode::inc_ty(){
-		ty += 0.1; update_matrices();
+		ty += 0.05; update_matrices();
 	}
 
 	void HNode::inc_tz(){
-		tz += 0.1; update_matrices();
+		tz += 0.05; update_matrices();
 	}
 
 	void HNode::dec_tx(){
-		tx -= 0.1; update_matrices();
+		tx -= 0.05; update_matrices();
 	}
 
 	void HNode::dec_ty(){
-		ty -= 0.1; update_matrices();
+		ty -= 0.05; update_matrices();
 	}
 
 	void HNode::dec_tz(){
-		tz -= 0.1; update_matrices();
+		tz -= 0.05; update_matrices();
 	}
 
 
