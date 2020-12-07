@@ -24,7 +24,6 @@ namespace csX75	 {
 		uint texture;
 
 		std::string name;
-
 		glm::vec4 color;
 
 		glm::mat4 scaling;
@@ -48,24 +47,18 @@ namespace csX75	 {
 
 		void add_child(HNode*);
 		void render();
-		void change_parameters(GLfloat,GLfloat,GLfloat,GLfloat,GLfloat,GLfloat,GLfloat,GLfloat,GLfloat,GLfloat,GLfloat,GLfloat);
+		void change_parameters(GLfloat, GLfloat, GLfloat, GLfloat, GLfloat, GLfloat,
+							GLfloat, GLfloat, GLfloat, GLfloat, GLfloat, GLfloat);
 		void render_tree();
-		void inc_rx();
-		void inc_ry();
-		void inc_rz();
-		void dec_rx();
-		void dec_ry();
-		void dec_rz();
-		void inc_tx();
-		void inc_ty();
-		void inc_tz();
-		void dec_tx();
-		void dec_ty();
-		void dec_tz();
+		void inc_rx(); void inc_ry(); void inc_rz();
+		void dec_rx(); void dec_ry(); void dec_rz();
+		void inc_tx(); void inc_ty(); void inc_tz();
+		void dec_tx(); void dec_ty(); void dec_tz();
 		glm::mat4 get_transformation();
+		glm::mat4 get_scaling();
 	};
 
-	glm::mat4* multiply_stack(std::vector <glm::mat4> );
+	glm::mat4* multiply_stack(std::vector<glm::mat4>);
 };	
 
 #endif

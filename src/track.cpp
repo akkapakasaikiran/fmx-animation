@@ -142,7 +142,7 @@ void circle_points(glm::vec4* posns, int num_pts, double r, double z){
 		posns[i] = glm::vec4(r*glm::cos(i*angle), r*glm::sin(i*angle), z, 1.0);
 }
 
-// Constructs a square given four points and puts it in vertices 
+// Construct a square given four points and puts it in vertices 
 void square(glm::vec4* normals_arr, glm::vec4* vertices, 
 		glm::vec4 a, glm::vec4 b, glm::vec4 c, glm::vec4 d, int i, glm::vec2* texcoords = NULL){
 
@@ -264,7 +264,6 @@ void half_gaussian_points(glm::vec4* posns, int num_pts, double x){
 		z = z + 0.1;
 		posns[i] = glm::vec4(x, glm::exp(-4.5*z*z), z, 1.0);
 	}
-	//posns[num_pts - 1] = glm::vec4(x,0,1,1.0);
 }
 
 void laplacian_points(glm::vec4* posns, int num_pts, double x, int mult){ 
@@ -303,7 +302,7 @@ unsigned char* loadImage(const char* filepath, int &w, int &h)
 	w = *((int*) &(header[0x12]));
 	h = *((int*) &(header[0x16]));
 
-	//Just in case metadata is missing
+	// Just in case metadata is missing
 	if(size == 0) size = w * h * 3;
 	if(pos == 0) pos = 54;
 
@@ -326,7 +325,7 @@ uint loadCubemap(std::string* faces)
 	for (unsigned int i = 0; i < 6; i++){
 		unsigned char *data = loadImage(faces[i].c_str(), w, h);
 		if(data){
-			std::cout << w << " " << h << std::endl;
+			// std::cout << w << " " << h << std::endl;
 			glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 
 						 0, GL_RGB, w, h, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
 		}
@@ -377,12 +376,12 @@ void initBuffersGL()
 	projection = glGetUniformLocation(skyshaderProgram, "projection");
 
 	std::string faces[6] = {
-		"skybox/skybox2/px1.bmp",
-		"skybox/skybox2/nx1.bmp",
-		"skybox/skybox2/ny1.bmp",
-		"skybox/skybox2/py1.bmp",
-		"skybox/skybox2/pz1.bmp",
-		"skybox/skybox2/nz1.bmp"
+		"skybox/skybox1/px.bmp",
+		"skybox/skybox1/nx.bmp",
+		"skybox/skybox1/ny.bmp",
+		"skybox/skybox1/py.bmp",
+		"skybox/skybox1/pz.bmp",
+		"skybox/skybox1/nz.bmp"
 	};
 	cubemapTexture = loadCubemap(faces); 
 
@@ -397,6 +396,7 @@ void initBuffersGL()
 	glEnableVertexAttribArray(vPos);
 	glVertexAttribPointer(vPos, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
 
+////////////////////////////////////////////////////////////////////////////////////
 
 	int num_vertices = 60;
 
@@ -721,6 +721,7 @@ glm::mat4 loadCameras()
 
 	posn = glm::vec3(mult * glm::vec4(0.0, 0.0, 0.0, 1.0));
 	lookat_pt = glm::vec3(mult * glm::vec4(0.0, 0.0, 1.0, 1.0));
+	up = glm::vec3(mult * glm::vec4(up, 1.0)) - posn;
 
 	cameras["go_pro"] = new csX75::Camera(posn, rot, up, lookat_pt);
 
@@ -749,6 +750,8 @@ void renderGL()
 
 	projection_matrix = loadCameras();
 
+	// Set camera parameters
+
 	c_rotation_matrix = glm::rotate(glm::mat4(1.0f), glm::radians(curr_camera->rotation.x), glm::vec3(1.0f, 0.0f, 0.0f));
 	c_rotation_matrix = glm::rotate(c_rotation_matrix, glm::radians(curr_camera->rotation.y), glm::vec3(0.0f, 1.0f, 0.0f));
 	c_rotation_matrix = glm::rotate(c_rotation_matrix, glm::radians(curr_camera->rotation.z), glm::vec3(0.0f, 0.0f, 1.0f));
@@ -759,6 +762,7 @@ void renderGL()
 
 	view_matrix = projection_matrix * lookat_matrix;
 
+	// Set up light info and pass to shader
 	glm::mat4 mult = nodes["root"]->get_transformation();
 	mult *= nodes["engine"]->get_transformation();
 	mult *= nodes["frontlight"]->get_transformation();
@@ -768,7 +772,6 @@ void renderGL()
 	mult = nodes["root"]->get_transformation();
 	mult *= nodes["hip"]->get_transformation();
 	posn = lookat_matrix * glm::vec4(glm::vec3(mult * glm::vec4(0.0,0.0,0.0,1.0)) + glm::vec3(0.0,0.0,5.0), 1.0);
-	//std::cout<<posn[0]<<" "<<posn[1]<<" "<<posn[2]<<" "<<posn[3]<<"\n";
 	glUniform4fv(spotlight, 1, glm::value_ptr(posn));
 
 	matrixStack.push_back(view_matrix);
@@ -779,10 +782,10 @@ void renderGL()
 	root_node->render_tree();
 
 	// draw skybox 
-	glDepthFunc(GL_LEQUAL);  // change depth function so depth test passes when values are equal to depth buffer's content
+	glDepthFunc(GL_LEQUAL);  // Change depth function so depth test passes when values are equal to depth buffer's content
 	glUseProgram(skyshaderProgram);
 
-	glm::mat4 viewm = glm::mat4(glm::mat3(lookat_matrix)); // remove translation from the view matrix
+	glm::mat4 viewm = glm::mat4(glm::mat3(lookat_matrix)); // Remove translation from the view matrix
 
 	glUniformMatrix4fv(view, 1, GL_FALSE, glm::value_ptr(viewm));
 	glUniformMatrix4fv(projection, 1, GL_FALSE, glm::value_ptr(projection_matrix));
@@ -791,7 +794,7 @@ void renderGL()
 	glBindVertexArray(skyboxVAO);
 	glDrawArrays(GL_TRIANGLES, 0, 36);
 
-	glDepthFunc(GL_LESS); // set depth function back to default
+	glDepthFunc(GL_LESS); // Set depth function back to default
 }
 
 int main(int argc, char** argv)
@@ -806,7 +809,7 @@ int main(int argc, char** argv)
 	if (!glfwInit())
 		return -1;
 
-	//We want OpenGL 4.0
+	// We want OpenGL 4.0
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3); 
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
 	//This is for MacOSX - can be omitted otherwise
@@ -843,7 +846,6 @@ int main(int argc, char** argv)
 	glfwSetKeyCallback(window, csX75::key_callback);
 	//Framebuffer resize callback
 	glfwSetFramebufferSizeCallback(window, csX75::framebuffer_size_callback);
-
 	// Ensure we can capture the escape key being pressed below
 	glfwSetInputMode(window, GLFW_STICKY_KEYS, GL_TRUE);
 
@@ -852,8 +854,7 @@ int main(int argc, char** argv)
 	initBuffersGL();
 
 	// Loop until the user closes the window
-	while (glfwWindowShouldClose(window) == 0)
-	{
+	while(!glfwWindowShouldClose(window)){
 		// Render here
 		renderGL();
 
@@ -864,12 +865,12 @@ int main(int argc, char** argv)
 		glfwPollEvents();
 
 		if(mode || mode1 || mode2){
-			int count=1; // number of keyframes read
+			int count = 1; // number of keyframes read
 			std::ifstream fs;
 			fs.open("keyframes.txt");
 			int t;
 
-			fs>>t;
+			fs >> t;
 
 			std::map<std::string, csX75::HNode*>::iterator itr = nodes.begin();
 
@@ -905,9 +906,9 @@ int main(int argc, char** argv)
 			fs >> light_status1[0][2];
 			fs >> light_status1[0][3];
 
-			int idx=0;
+			int idx = 0;
 
-			for(itr=nodes.begin();itr != nodes.end(); itr++){
+			for(itr = nodes.begin(); itr != nodes.end(); itr++){
 
 				fs >> helper[0][idx];
 				idx++;
@@ -941,7 +942,7 @@ int main(int argc, char** argv)
 			int cnt=0;
 
 
-			while(fs>>t){
+			while(fs >> t){
 				count++;
 
 				fs >> camera_num1[1];
@@ -961,9 +962,9 @@ int main(int argc, char** argv)
 				fs >> light_status1[1][2];
 				fs >> light_status1[1][3];
 
-				idx=0;
+				idx = 0;
 
-				for(itr=nodes.begin();itr != nodes.end(); itr++){
+				for(itr = nodes.begin(); itr != nodes.end(); itr++){
 
 					fs >> helper[1][idx];
 					idx++;
@@ -981,7 +982,6 @@ int main(int argc, char** argv)
 					std::string s=itr->first;
 					if(s=="front_tire" || s=="back_tire"){
 						helper[1][idx] = (1-count)*360;
-						//std::cout<<helper[1][idx];
 					}
 
 					idx++;
@@ -1001,7 +1001,7 @@ int main(int argc, char** argv)
 					idx++;
 				}
 
-				camera_num=camera_num1[0];
+				camera_num = camera_num1[0];
 
 				light_status = light_status1[0];
 
@@ -1015,25 +1015,16 @@ int main(int argc, char** argv)
 				GLfloat diff_c_up_y = (c_up_y1[1] - c_up_y1[0])/15.0;
 				GLfloat diff_c_up_z = (c_up_z1[1] - c_up_z1[0])/15.0;
 
-				//std::cout<<diff_c_xpos<<" "<<diff_c_ypos<<" "<<diff_c_zpos<<" "<<diff_c_xrot<<" "<<diff_c_yrot<<" "<<diff_c_zrot<<" "<<diff_c_up_x<<" "<<diff_c_up_y<<" "<<diff_c_up_z<<"\n";
-
 				GLfloat diff_helper[612];
 
-				for(idx=0;idx<612;idx++){
+				for(idx = 0; idx < 612; idx++)
 					diff_helper[idx] = (helper[1][idx] - helper[0][idx])/15.0;
-				}
 
-				//if(fs.eof()){
-    				//std::cout << "[EoF reached]\n";
-    			//	break;
-				//}
-
-				idx=0;
+				idx = 0;
 
 				for(int i=1;i<=15;i++){
-
-					//std::cout<<i<<"\n";
-					idx=0;
+					
+					idx = 0;
 
 					GLfloat tx1,ty1,tz1,rx1,ry1,rz1,sx1,sy1,sz1,pre_rot_x1,pre_rot_y1,pre_rot_z1;
 
@@ -1050,7 +1041,7 @@ int main(int argc, char** argv)
 
 						//std::cout<<c_xpos<<" "<<c_ypos<<" "<<c_zpos<<" "<<c_xrot<<" "<<c_yrot<<" "<<c_zrot<<" "<<c_up_x<<" "<<c_up_y<<" "<<c_up_z<<"\n";
 
-						for(itr=nodes.begin();itr != nodes.end();itr++){
+						for(itr = nodes.begin(); itr != nodes.end(); itr++){
 							tx1 = helper[0][idx] + i*diff_helper[idx];
 							idx++;
 							ty1 = helper[0][idx] + i*diff_helper[idx];
@@ -1084,47 +1075,41 @@ int main(int argc, char** argv)
 						if(mode2){
 
 							int num_bytes_written = 5;
-							int p=5;
+							int p = 5;
 
 							char arr[5];
-							int p1=0;
+							int p1 = 0;
 
-							int cnt1=cnt;
+							int cnt1 = cnt;
 
-							while(cnt1>0){
-								int rem=cnt1%10;
-								cnt1=cnt1/10;
-								arr[p1]=rem+48;
+							while(cnt1 > 0){
+								int rem = cnt1%10;
+								cnt1 = cnt1/10;
+								arr[p1] = rem+48;
 								p1++;
 								p--;
 							}
 
-							//std::cout<<p<<"\n";
-							
 							std::string input="frame-";
 
-							for(int l=0;l<p;l++)
-								input=input+'0';
+							for(int l = 0; l < p; l++)
+								input = input + '0';
 
-							for(int l=p1-1;l>=0;l--)
-								input=input+arr[l];
+							for(int l = p1 - 1; l >= 0; l--)
+								input = input + arr[l];
 
-							input=input+".tga";
-
-							//std::cout<<input<<"\n";
+							input = input + ".tga";
 
 							std::string drwfilename=input;
 
-							int width=1000;
-							int height=500;
+							int width = 1000;
+							int height = 500;
 										
-							unsigned char* ustore = new unsigned char[width*height*3];
-
-							//glPixelStorei(GL_PACK_ALIGNMENT, 1);
+							unsigned char* ustore = new unsigned char[width * height * 3];
 							
 							glReadPixels(0, 100, width, height, GL_RGB, GL_UNSIGNED_BYTE, ustore);
 						
-							num_bytes_written = stbi_write_tga( drwfilename.c_str(), width, height, 3, (void*)ustore);
+							num_bytes_written = stbi_write_tga( drwfilename.c_str(), width, height, 3, (void*) ustore);
 
 							cnt++;
 
@@ -1132,30 +1117,25 @@ int main(int argc, char** argv)
 
 						glfwSwapBuffers(window);
 
-						//emulate sleep
-						//long long int local=0;
-						//while(local<1e8)
-							//local++;
-
 						glfwSetTime(0);
-						while(glfwGetTime()<0.067){}
+						while(glfwGetTime() < 0.067){}
 					}
 				}
 
-				camera_num1[0]=camera_num1[1];
-				c_xpos1[0]=c_xpos1[1];
-				c_ypos1[0]=c_ypos1[1];
-				c_zpos1[0]=c_zpos1[1];
-				c_xrot1[0]=c_xrot1[1];
-				c_yrot1[0]=c_yrot1[1];
-				c_zrot1[0]=c_zrot1[1];
-				c_up_x1[0]=c_up_x1[1];
-				c_up_y1[0]=c_up_y1[1];
-				c_up_z1[0]=c_up_z1[1];
+				camera_num1[0] = camera_num1[1];
+				c_xpos1[0] = c_xpos1[1];
+				c_ypos1[0] = c_ypos1[1];
+				c_zpos1[0] = c_zpos1[1];
+				c_xrot1[0] = c_xrot1[1];
+				c_yrot1[0] = c_yrot1[1];
+				c_zrot1[0] = c_zrot1[1];
+				c_up_x1[0] = c_up_x1[1];
+				c_up_y1[0] = c_up_y1[1];
+				c_up_z1[0] = c_up_z1[1];
 
-				light_status1[0]=light_status1[1];
+				light_status1[0] = light_status1[1];
 
-				for(idx=0;idx<612;idx++){
+				for(idx = 0; idx < 612; idx++){
 					helper[0][idx] = helper[1][idx];
 				}
 			}
@@ -1171,11 +1151,9 @@ int main(int argc, char** argv)
 				c_up_y = c_up_y1[0];
 				c_up_z = c_up_z1[0];
 
-				idx=0;
+				idx = 0;
 
-				//std::cout<<c_xpos<<" "<<c_ypos<<" "<<c_zpos<<" "<<c_xrot<<" "<<c_yrot<<" "<<c_zrot<<" "<<c_up_x<<" "<<c_up_y<<" "<<c_up_z<<"\n";
-
-				for(itr=nodes.begin();itr != nodes.end();itr++){
+				for(itr = nodes.begin(); itr != nodes.end(); itr++){
 
 					GLfloat tx1,ty1,tz1,rx1,ry1,rz1,sx1,sy1,sz1,pre_rot_x1,pre_rot_y1,pre_rot_z1;
 
@@ -1210,9 +1188,9 @@ int main(int argc, char** argv)
 
 			fs.close();
 			std::cout << "Keyframes counted : " << count << "\n";
-			mode=false;
-			mode1=false;
-			mode2=false;
+			mode = false;
+			mode1 = false;
+			mode2 = false;
 		}
 	}
 
