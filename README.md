@@ -13,9 +13,10 @@ For shading and texturing, [Learn OpenGL](https://learnopengl.com/) was invaluab
 For the environment map we used [babylonjs](https://doc.babylonjs.com/toolsAndResources/assetLibraries/availableTextures#cubetextures).
 We have also referred to the official website of GLFW and GLM.
 
+Song Credits : Achint Thakkar, Music Composer of the Television Series "Scam 1992 : The Harshad Mehta Story"
+Song Credits : Astromania, Music Composer of the Coffin Song which was popularised by the "Dancing Pallbearers"
+
 ## Running the code
 - `make` to compile the neccesary files and create the executable(s) 
-- `./bin/a2-model-rider` to start the application for rider
-- `./bin/a2-model-bike` to start the application for bike
-- `./bin/a2-model-track` to start the application for track, which also renders the rider and bike
+- `./fmx-animate` to start the application
 - `make clean` if you want to start afresh
