@@ -2,7 +2,8 @@
 #include <iostream>
 #include<bits/stdc++.h>
 
-// #define STB_IMAGE_IMPLEMENTATION
+#define STB_IMAGE_IMPLEMENTATION
+#include "stb_image.h"
 // #define STBI_ONLY_TGA
 // #include "stb_image_read.hpp"
 // #define STB_IMAGE_WRITE_IMPLEMENTATION
@@ -77,7 +78,7 @@ namespace csX75
 			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
-			unsigned char header[54];// 54 Byte header of BMP
+			/*unsigned char header[54];// 54 Byte header of BMP
 			int pos;
 			uint w, h, size; // size = w*h*3
 			unsigned char* data; // Data in RGB FORMAT
@@ -110,7 +111,23 @@ namespace csX75
 			else
 				std::cout << "Failed to load texture" << std::endl;
 
-			free(data);	
+			free(data);	*/
+
+			int width, height, nrChannels;
+    		stbi_set_flip_vertically_on_load(true); // tell stb_image.h to flip loaded texture's on the y-axis.
+    		// The FileSystem::getPath(...) is part of the GitHub repository so we can find files on any IDE/platform; replace it with your own image path.
+    		unsigned char *data = stbi_load(texfilepath.c_str(), &width, &height, &nrChannels, 0);
+    		if (data)
+    		{
+    			glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+        		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
+        		glGenerateMipmap(GL_TEXTURE_2D);
+    		}
+    		else
+    		{
+        		std::cout << "Failed to load texture" << std::endl;
+    		}
+    		stbi_image_free(data);
 		}
 
 		// Set parent
