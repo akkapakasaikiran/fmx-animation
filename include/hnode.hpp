@@ -26,7 +26,6 @@ namespace csX75	 {
 		std::string name;
 		glm::vec4 color;
 
-		glm::mat4 scaling;
 		glm::mat4 rotation;
 		glm::mat4 translation;
 		glm::mat4 pre_rotation_translation;
@@ -41,6 +40,8 @@ namespace csX75	 {
 		GLfloat tx,ty,tz,rx,ry,rz,sx,sy,sz;
 
 		GLfloat pre_rot_x,pre_rot_y,pre_rot_z;
+
+		glm::mat4 scaling;
 
 		HNode (HNode*, GLuint, glm::vec4*, std::size_t, glm::vec4, glm::vec4*, std::string = "", glm::vec2* = NULL);
 		HNode (HNode*, GLuint, glm::vec4*, std::size_t, glm::vec4);

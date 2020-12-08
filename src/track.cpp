@@ -27,6 +27,8 @@ GLuint ModelviewMatrix;
 GLuint normalMatrix;
 GLuint headlight;
 GLuint spotlight;
+GLuint nrml;
+GLuint ViewMatrix;
 
 // skybox
 GLuint view;
@@ -369,6 +371,8 @@ void initBuffersGL()
   	light_stat = glGetUniformLocation(shaderProgram, "light_stat");
   	headlight = glGetUniformLocation(shaderProgram, "headlight");
   	spotlight = glGetUniformLocation(shaderProgram, "spotlight");
+  	nrml = glGetUniformLocation(shaderProgram, "nrml");
+  	ViewMatrix = glGetUniformLocation(shaderProgram, "ViewMatrix");
 
 	// Get the attributes from the shader program
 	vPos = glGetAttribLocation(skyshaderProgram, "vPos");
@@ -376,12 +380,18 @@ void initBuffersGL()
 	projection = glGetUniformLocation(skyshaderProgram, "projection");
 
 	std::string faces[6] = {
-		"skybox/skybox2/px1.bmp",
+		/*"skybox/skybox2/px1.bmp",
 		"skybox/skybox2/nx1.bmp",
 		"skybox/skybox2/ny1.bmp",
 		"skybox/skybox2/py1.bmp",
 		"skybox/skybox2/pz1.bmp",
-		"skybox/skybox2/nz1.bmp"
+		"skybox/skybox2/nz1.bmp"*/
+		"skybox/skybox1/px.bmp",
+		"skybox/skybox1/nx.bmp",
+		"skybox/skybox1/ny.bmp",
+		"skybox/skybox1/py.bmp",
+		"skybox/skybox1/pz.bmp",
+		"skybox/skybox1/nz.bmp"
 	};
 	cubemapTexture = loadCubemap(faces); 
 
@@ -491,19 +501,19 @@ void initBuffersGL()
 	nodes["semicircle"] = new csX75::HNode(nodes["rect1"], 120, semicircle , sizeof(semicircle), glm::vec4(1,0,0,0), semicircle_normals);
 	nodes["semicircle"]->change_parameters(1.5,0,3, 0,0,0, 1,1,1, 0,0,0);
 
-	nodes["rect2"] = new csX75::HNode(nodes["semicircle"], 60, vertices , sizeof(vertices), glm::vec4(1,0,0,0), normals);
+	nodes["rect2"] = new csX75::HNode(nodes["semicircle"], 60, vertices , sizeof(vertices), glm::vec4(1,0,0,0), normals, "textures/small_barbara.bmp", texcoords);
 	nodes["rect2"]->change_parameters(1.5,0,-3, 0,0,0, 1,1,1, 0,0,0);
 
 	nodes["obstacle1"] = new csX75::HNode(nodes["rect2"], 120, obstacle1 , sizeof(obstacle1), glm::vec4(1,0,0,0), obstacle1_normals);
 	nodes["obstacle1"]->change_parameters(0,0,-1, 0,0,0, 1,1,1, 0,0,0);
 
-	nodes["rect3"] = new csX75::HNode(nodes["obstacle1"], 60, vertices , sizeof(vertices), glm::vec4(1,0,0,0), normals);
+	nodes["rect3"] = new csX75::HNode(nodes["obstacle1"], 60, vertices , sizeof(vertices), glm::vec4(1,0,0,0), normals, "textures/small_barbara.bmp", texcoords);
 	nodes["rect3"]->change_parameters(0,0,-4, 0,0,0, 1,1,1, 0,0,0);
 
 	nodes["semicircle2"] = new csX75::HNode(nodes["rect3"], 120, semicircle , sizeof(semicircle), glm::vec4(1,0,0,0), semicircle_normals);
 	nodes["semicircle2"]->change_parameters(1.5,0,0, 0,0,0, -1,1,-1, 0,0,0);
 
-	nodes["rect4"] = new csX75::HNode(nodes["semicircle2"], 60, vertices , sizeof(vertices), glm::vec4(1,0,0,0), normals);
+	nodes["rect4"] = new csX75::HNode(nodes["semicircle2"], 60, vertices , sizeof(vertices), glm::vec4(1,0,0,0), normals, "textures/small_barbara.bmp", texcoords);
 	nodes["rect4"]->change_parameters(1.5,0,0, 0,0,0, 1,1,0.5, 0,0,0);
 
 	nodes["obstacle2_1"] = new csX75::HNode(nodes["rect4"], 60, obstacle2 , sizeof(obstacle2), glm::vec4(1,0,0,0), obstacle2_normals);
@@ -512,7 +522,7 @@ void initBuffersGL()
 	nodes["obstacle2_2"] = new csX75::HNode(nodes["obstacle2_1"], 60, obstacle2 , sizeof(obstacle2), glm::vec4(1,0,0,0), obstacle2_normals);
 	nodes["obstacle2_2"]->change_parameters(0,0,1, 0,0,0, 1,1,-1, 0,0,0);
 
-	nodes["rect5"] = new csX75::HNode(nodes["obstacle2_2"], 60, vertices , sizeof(vertices), glm::vec4(1,0,0,0), normals);
+	nodes["rect5"] = new csX75::HNode(nodes["obstacle2_2"], 60, vertices , sizeof(vertices), glm::vec4(1,0,0,0), normals, "textures/small_barbara.bmp", texcoords);
 	nodes["rect5"]->change_parameters(0,0,1, 0,0,0, 1,1,0.5, 0,0,0);
 
 	nodes["obstacle3_1"] = new csX75::HNode(nodes["rect5"], 12, obstacle3 , sizeof(obstacle2), glm::vec4(1,0,0,0), obstacle3_normals);
@@ -527,25 +537,25 @@ void initBuffersGL()
 	nodes["obstacle3_4"] = new csX75::HNode(nodes["obstacle3_3"], 12, obstacle3 , sizeof(obstacle2), glm::vec4(1,0,0,0), obstacle3_normals);
 	nodes["obstacle3_4"]->change_parameters(0,0,0.2, 0,0,0, 1,0.1,0.1, 0,0,0);
 
-	nodes["rect6"] = new csX75::HNode(nodes["obstacle3_4"], 60, vertices , sizeof(vertices), glm::vec4(1,0,0,0), normals);
+	nodes["rect6"] = new csX75::HNode(nodes["obstacle3_4"], 60, vertices , sizeof(vertices), glm::vec4(1,0,0,0), normals, "textures/small_barbara.bmp", texcoords);
 	nodes["rect6"]->change_parameters(0,0,0.1, 0,0,0, 1,1,0.5, 0,0,0);
 
 	nodes["semicircle3"] = new csX75::HNode(nodes["rect6"], 120, semicircle , sizeof(semicircle), glm::vec4(1,0,0,0), semicircle_normals);
 	nodes["semicircle3"]->change_parameters(1.5,0,1.5, 0,0,0, 1,1,1, 0,0,0);
 
-	nodes["rect7"] = new csX75::HNode(nodes["semicircle3"], 60, vertices , sizeof(vertices), glm::vec4(1,0,0,0), normals);
+	nodes["rect7"] = new csX75::HNode(nodes["semicircle3"], 60, vertices , sizeof(vertices), glm::vec4(1,0,0,0), normals, "textures/small_barbara.bmp", texcoords);
 	nodes["rect7"]->change_parameters(1.5,0,0, 0,0,0, -1,1,-1, 0,0,0);
 
 	nodes["obstacle4"] = new csX75::HNode(nodes["rect7"], 120, obstacle4 , sizeof(obstacle4), glm::vec4(1,0,0,0), obstacle4_normals);
 	nodes["obstacle4"]->change_parameters(0,0,-4, 0,0,0, 1,1,1, 0,0,0);
 
-	nodes["rect8"] = new csX75::HNode(nodes["obstacle4"], 60, vertices , sizeof(vertices), glm::vec4(1,0,0,0), normals);
+	nodes["rect8"] = new csX75::HNode(nodes["obstacle4"], 60, vertices , sizeof(vertices), glm::vec4(1,0,0,0), normals, "textures/small_barbara.bmp", texcoords);
 	nodes["rect8"]->change_parameters(0,0,-1, 0,0,0, -1,1,-1, 0,0,0);
 
 	nodes["semicircle4"] = new csX75::HNode(nodes["rect8"], 120, semicircle , sizeof(semicircle), glm::vec4(1,0,0,0), semicircle_normals);
 	nodes["semicircle4"]->change_parameters(1.5,0,-3, 0,0,0, -1,1,-1, 0,0,0);
 
-	nodes["rect9"] = new csX75::HNode(nodes["semicircle4"], 60, vertices , sizeof(vertices), glm::vec4(1,0,0,0), normals);
+	nodes["rect9"] = new csX75::HNode(nodes["semicircle4"], 60, vertices , sizeof(vertices), glm::vec4(1,0,0,0), normals, "textures/small_barbara.bmp", texcoords);
 	nodes["rect9"]->change_parameters(1.5,0,0, 0,0,0, 1,1,1, 0,0,0);
 
 	glm::vec4 obstacle1_normals_copy[6*num_expo-6];
@@ -555,7 +565,7 @@ void initBuffersGL()
 	nodes["obstacle5"] = new csX75::HNode(nodes["rect9"], 120, obstacle1 , sizeof(obstacle1), glm::vec4(1,0,0,0), obstacle1_normals_copy);
 	nodes["obstacle5"]->change_parameters(0,0,4, 0,0,0, 1,-1,1, 0,0,0);
 
-	nodes["rect10"] = new csX75::HNode(nodes["obstacle5"], 60, vertices , sizeof(vertices), glm::vec4(1,0,0,0), normals);
+	nodes["rect10"] = new csX75::HNode(nodes["obstacle5"], 60, vertices , sizeof(vertices), glm::vec4(1,0,0,0), normals, "textures/small_barbara.bmp", texcoords);
 	nodes["rect10"]->change_parameters(0,0,1, 0,0,0, 1,1,1, 0,0,0);
 
 /////////////////////////////////////////////////////////////////////////////////////////////
@@ -743,6 +753,29 @@ glm::mat4 loadCameras()
 
 }
 
+void normal_adjustment(glm::mat4 lookat_matrix){
+	glm::mat4 mult = nodes["root"]->get_transformation();
+	mult *= nodes["engine"]->get_transformation();
+	mult *= nodes["frontlight"]->get_transformation();
+	mult *= nodes["frontlight"]->scaling;
+
+	//mult now stores the modelling transformation of the frontlight
+
+	mult = lookat_matrix * mult;
+
+	//mult now contains the modelview matrix corresponding to the frontlight.
+
+	normal_matrix = glm::transpose (glm::inverse(glm::mat3(mult)));
+
+	glm::vec3 nrml_posn = glm::vec3(1.0,0.0,0.0);
+
+	nrml_posn = glm::normalize(normal_matrix * nrml_posn);
+
+	//std::cout<<nrml_posn[0]<<" "<<nrml_posn[1]<<" "<<nrml_posn[2]<<"\n";
+
+	glUniform3fv(nrml, 1, glm::value_ptr(nrml_posn));
+}
+
 void renderGL()
 {
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -768,13 +801,19 @@ void renderGL()
 	glm::mat4 mult = nodes["root"]->get_transformation();
 	mult *= nodes["engine"]->get_transformation();
 	mult *= nodes["frontlight"]->get_transformation();
+	mult *= nodes["frontlight"]->scaling;
 	glm::vec4 posn = lookat_matrix * mult * glm::vec4(0.0, 0.0, 0.0, 1.0); //position of the headlight in view coordinates
 	glUniform4fv(headlight, 1, glm::value_ptr(posn));
 
 	mult = nodes["root"]->get_transformation();
 	mult *= nodes["hip"]->get_transformation();
+	mult *= nodes["hip"]->scaling;
 	posn = lookat_matrix * glm::vec4(glm::vec3(mult * glm::vec4(0.0,0.0,0.0,1.0)) + glm::vec3(0.0,5.0,0.0), 1.0);
 	glUniform4fv(spotlight, 1, glm::value_ptr(posn));
+
+	glUniformMatrix4fv(ViewMatrix, 1, GL_FALSE, glm::value_ptr(lookat_matrix));
+
+	normal_adjustment(lookat_matrix);
 
 	// std::cout << glm::to_string(posn) << std::endl; 
 
@@ -1005,10 +1044,6 @@ int main(int argc, char** argv)
 					idx++;
 				}
 
-				camera_num = camera_num1[0];
-
-				light_status = light_status1[0];
-
 				GLfloat diff_c_xpos = (c_xpos1[1] - c_xpos1[0])/15.0;
 				GLfloat diff_c_ypos = (c_ypos1[1] - c_ypos1[0])/15.0;
 				GLfloat diff_c_zpos = (c_zpos1[1] - c_zpos1[0])/15.0;
@@ -1033,6 +1068,11 @@ int main(int argc, char** argv)
 					GLfloat tx1,ty1,tz1,rx1,ry1,rz1,sx1,sy1,sz1,pre_rot_x1,pre_rot_y1,pre_rot_z1;
 
 					if(mode || mode2){
+
+						camera_num = camera_num1[0];
+
+						light_status = light_status1[0];
+
 						c_xpos = c_xpos1[0] + i*diff_c_xpos;
 						c_ypos = c_ypos1[0] + i*diff_c_ypos;
 						c_zpos = c_zpos1[0] + i*diff_c_zpos;

@@ -11,6 +11,8 @@ uniform vec4 light_stat;
 uniform vec4 headlight;
 uniform vec4 spotlight;
 uniform mat4 ModelviewMatrix;
+uniform vec3 nrml;
+uniform mat4 ViewMatrix;
 
 uniform sampler2D Texture;
 
@@ -24,7 +26,8 @@ void main()
 	vec4 spec = vec4(0.0); 
 
 	// Defining Light 1
-	vec3 lightPos = vec3(50.0, 50.0, 0.0); //in eye coordinates
+	vec4 lightPos1 = vec4(0.0, 60.0, 40.0, 1.0); //in world coordinates
+	vec3 lightPos = vec3(ViewMatrix * lightPos1); //in view coordinates
 	vec3 lightDir = normalize(vec3(lightPos - eye));
 
 	//Diffuse
@@ -60,6 +63,8 @@ void main()
 	dotProduct = dot(n, lightDir);
 	intensity =  max( dotProduct, 0.0);
 
+	float dotProduct1 = dot(normalize(nrml), -lightDir);
+
 	// Compute specular component only if light falls on vertex
 	if(intensity > 0.0){
 		vec3 v = normalize(-eye.xyz);
@@ -68,13 +73,19 @@ void main()
 		spec = specular * pow(intSpec, shininess);
 	}  
 
-	if(light_stat[2] == 1.0) color += (intensity * diffuse + spec) * tmp_color + ambient;
+	if(light_stat[2] == 1.0){
+		//if(dotProduct1 > 0.8)
+      		color += (intensity * diffuse + spec) * tmp_color + ambient;
+    	//else
+      		//color += ambient;
+	}
 	else color += ambient;
 
 
 	// Defining Light 2
   	// vec3 lightPos = vec3(0.0, 0.0, 0.0); //in eye coordinates
-  	lightPos = vec3(50.0, 50.0, -80.0); //in eye coordinates
+  	lightPos1 = vec4(0.0, 60.0, -40.0, 1.0); //in world coordinates
+	lightPos = vec3(ViewMatrix * lightPos1); //in view coordinates
   	lightDir = normalize(vec3(lightPos - eye));
 
   	//Diffuse
