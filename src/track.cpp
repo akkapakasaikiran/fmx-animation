@@ -376,12 +376,12 @@ void initBuffersGL()
 	projection = glGetUniformLocation(skyshaderProgram, "projection");
 
 	std::string faces[6] = {
-		"skybox/skybox1/px.bmp",
-		"skybox/skybox1/nx.bmp",
-		"skybox/skybox1/ny.bmp",
-		"skybox/skybox1/py.bmp",
-		"skybox/skybox1/pz.bmp",
-		"skybox/skybox1/nz.bmp"
+		"skybox/skybox2/px1.bmp",
+		"skybox/skybox2/nx1.bmp",
+		"skybox/skybox2/ny1.bmp",
+		"skybox/skybox2/py1.bmp",
+		"skybox/skybox2/pz1.bmp",
+		"skybox/skybox2/nz1.bmp"
 	};
 	cubemapTexture = loadCubemap(faces); 
 
@@ -698,18 +698,20 @@ void initBuffersGL()
 
 glm::mat4 loadCameras()
 {
-	glm::vec3 posn(c_xpos, c_ypos, c_zpos);
-	// glm::vec3 posn(0.0, 0.0, 50.0);
+	glm::vec3 posn(c_xpos, c_ypos, c_zpos); 
 	glm::vec3 rot(c_xrot, c_yrot, c_zrot);
 	glm::vec3 up(c_up_x, c_up_y, c_up_z);
 	glm::vec3 lookat_pt(0.0, 0.0, 0.0);
-	
+	glm::mat4 mult;
+
+	posn /= zoom;	
 	cameras["global"] = new csX75::Camera(posn, rot, up, lookat_pt);
 
-	glm::mat4 mult = nodes["root"]->get_transformation();
+	mult = nodes["root"]->get_transformation();
 	mult *= nodes["hip"]->get_transformation();
-	lookat_pt = glm::vec3(mult * glm::vec4(glm::vec3(0.0), 1.0));
-	posn = glm::vec3(lookat_pt + glm::vec3(20.0, 10.0, 10.0));
+	lookat_pt = glm::vec3(mult * glm::vec4(0.0, 0.0, 0.0, 1.0));
+	glm::vec3 diff(10.0, 10.0, 10.0); // Hard coded for now 
+	posn = lookat_pt + (diff / zoom);
 
 	cameras["third_person"] = new csX75::Camera(posn, rot, up, lookat_pt);
 
@@ -771,8 +773,10 @@ void renderGL()
 
 	mult = nodes["root"]->get_transformation();
 	mult *= nodes["hip"]->get_transformation();
-	posn = lookat_matrix * glm::vec4(glm::vec3(mult * glm::vec4(0.0,0.0,0.0,1.0)) + glm::vec3(0.0,0.0,5.0), 1.0);
+	posn = lookat_matrix * glm::vec4(glm::vec3(mult * glm::vec4(0.0,0.0,0.0,1.0)) + glm::vec3(0.0,5.0,0.0), 1.0);
 	glUniform4fv(spotlight, 1, glm::value_ptr(posn));
+
+	// std::cout << glm::to_string(posn) << std::endl; 
 
 	matrixStack.push_back(view_matrix);
 	matrixStack1.push_back(lookat_matrix);
@@ -1118,7 +1122,7 @@ int main(int argc, char** argv)
 						glfwSwapBuffers(window);
 
 						glfwSetTime(0);
-						while(glfwGetTime() < 0.067){}
+						while(glfwGetTime() < (1.0/15)){}
 					}
 				}
 

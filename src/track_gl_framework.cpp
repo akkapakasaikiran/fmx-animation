@@ -4,14 +4,17 @@
 #include <map>
 #include <fstream>
 
-extern GLfloat c_xrot,c_yrot,c_zrot,c_xpos,c_ypos,c_zpos, c_up_x, c_up_y, c_up_z;
+extern GLfloat c_xrot, c_yrot, c_zrot;
+extern GLfloat c_xpos, c_ypos, c_zpos;
+extern GLfloat c_up_x, c_up_y, c_up_z;
+extern GLfloat zoom;
 extern glm::vec4 light_status;
 extern bool enable_perspective, mode, mode1, mode2;
 extern csX75::HNode* curr_node;
 extern std::map<std::string, csX75::HNode*> nodes;
 extern int camera_num;
 
-int time_stamp=0;
+int time_stamp = 0;
 
 namespace csX75
 {
@@ -31,7 +34,7 @@ namespace csX75
 	//!GLFW Error Callback
 	void error_callback(int error, const char* description)
 	{
-		std::cerr<<description<<std::endl;
+		std::cerr << description << std::endl;
 	}
 	
 	//!GLFW framebuffer resize callback
@@ -151,15 +154,11 @@ namespace csX75
 			curr_node->inc_tz();
 
 		// Camera Controls
-		else if((key == GLFW_KEY_KP_ADD || (key == GLFW_KEY_EQUAL && mods==GLFW_MOD_SHIFT)) && action == GLFW_PRESS){
-			c_xpos += 1;
-			c_ypos -= 0.6;
-			c_ypos -= 0.8;
+		else if((key == GLFW_KEY_KP_ADD || (key == GLFW_KEY_EQUAL && mods == GLFW_MOD_SHIFT)) && action == GLFW_PRESS){
+			zoom *= 1.1; // Hard coded factor for now
 		}
 		else if((key == GLFW_KEY_KP_SUBTRACT || key == GLFW_KEY_MINUS) && action == GLFW_PRESS){
-			c_xpos -= 1;
-			c_ypos += 0.6;
-			c_ypos += 0.8;
+			zoom *= (1 / 1.1);
 		}
 
 		else if(key == GLFW_KEY_Z && action == GLFW_PRESS){
@@ -168,98 +167,55 @@ namespace csX75
 
 		// Light Controls
 		else if(key == GLFW_KEY_K && action == GLFW_PRESS){
-			//std::cout<<light_status[0]<<" "<<light_status[1]<<" "<<light_status[2]<<" "<<light_status[3]<<"\n";
-			if(light_status[0]==1.0)
-				light_status[0]=0.0;
-			else
-				light_status[0]=1.0;
-			//std::cout<<light_status[0]<<" "<<light_status[1]<<" "<<light_status[2]<<" "<<light_status[3]<<"\n";
-		}
-		else if(key == GLFW_KEY_O && action == GLFW_PRESS){
-			//std::cout<<light_status[0]<<" "<<light_status[1]<<" "<<light_status[2]<<" "<<light_status[3]<<"\n";
-			if(light_status[2]==1.0)
-				light_status[2]=0.0;
-			else
-				light_status[2]=1.0;
-			//std::cout<<light_status[0]<<" "<<light_status[1]<<" "<<light_status[2]<<" "<<light_status[3]<<"\n";
+			light_status[0] = 1.0 - light_status[0];
 		}
 		else if(key == GLFW_KEY_M && action == GLFW_PRESS){
-			//std::cout<<light_status[0]<<" "<<light_status[1]<<" "<<light_status[2]<<" "<<light_status[3]<<"\n";
-			if(light_status[1]==1.0)
-				light_status[1]=0.0;
-			else
-				light_status[1]=1.0;
-			//std::cout<<light_status[0]<<" "<<light_status[1]<<" "<<light_status[2]<<" "<<light_status[3]<<"\n";
+			light_status[1] = 1.0 - light_status[1];
+		}
+		else if(key == GLFW_KEY_O && action == GLFW_PRESS){
+			light_status[2] = 1.0 - light_status[2];
 		}
 		else if(key == GLFW_KEY_Q && action == GLFW_PRESS){
-			//std::cout<<light_status[0]<<" "<<light_status[1]<<" "<<light_status[2]<<" "<<light_status[3]<<"\n";
-			if(light_status[3]==1.0)
-				light_status[3]=0.0;
-			else
-				light_status[3]=1.0;
-			//std::cout<<light_status[0]<<" "<<light_status[1]<<" "<<light_status[2]<<" "<<light_status[3]<<"\n";
+			light_status[3] = 1.0 - light_status[3];
 		}
+
+		// Save frames
 		else if(key == GLFW_KEY_S && action == GLFW_PRESS){
 			std::ofstream log;
 			log.open("keyframes.txt", std::ofstream::app);
 
 			log << time_stamp << " ";
-			time_stamp+=10;
+			time_stamp += 10;
 
 			log << camera_num << " ";
+			log << c_xpos << " " << c_ypos << " " << c_zpos << " ";
+			log << c_xrot << " " << c_yrot << " " << c_zrot << " ";
+			log << c_up_x << " " << c_up_y << " " << c_up_z << " ";
 
-			log << c_xpos << " ";
-			log << c_ypos << " ";
-			log << c_zpos << " ";
-			log << c_xrot << " ";
-			log << c_yrot << " ";
-			log << c_zrot << " ";
-			log << c_up_x << " ";
-			log << c_up_y << " ";
-			log << c_up_z << " ";
-
-			log << light_status[0] << " ";
-			log << light_status[1] << " ";
-			log << light_status[2] << " ";
-			log << light_status[3] << " ";
+			for(int i = 0; i < 4; i++)
+				log << light_status[i] << " ";
 
 			std::map<std::string, csX75::HNode*>::iterator itr = nodes.begin();
 
-			for(itr;itr != nodes.end(); itr++){
-				//std::cout<<itr->first<<"\n";
-				//std::cout<<itr->second->tx<<"\n";
-				//std::cout<<itr->second->ty<<"\n";
-				//std::cout<<itr->second->tz<<"\n";
-
-				log << itr->second->tx << " ";
-				log << itr->second->ty << " ";
-				log << itr->second->tz << " ";
-
-				log << itr->second->rx << " ";
-				log << itr->second->ry << " ";
-				log << itr->second->rz << " ";
-
-				log << itr->second->sx << " ";
-				log << itr->second->sy << " ";
-				log << itr->second->sz << " ";
-
-				log << itr->second->pre_rot_x << " ";
-				log << itr->second->pre_rot_y << " ";
-				log << itr->second->pre_rot_z << " ";
+			for(itr; itr != nodes.end(); itr++){
+				log << itr->second->tx << " " << itr->second->ty << " " << itr->second->tz << " ";
+				log << itr->second->rx << " " << itr->second->ry << " " << itr->second->rz << " ";
+				log << itr->second->sx << " " << itr->second->sy << " " << itr->second->sz << " ";
+				log << itr->second->pre_rot_x << " " << itr->second->pre_rot_y << " " << itr->second->pre_rot_z << " ";
 			}
-
 			log << "\n";
 
 			log.close();
 		}
+
 		else if(key == GLFW_KEY_P && action == GLFW_PRESS){
-			mode=true;
+			mode = true;
 		}
 		else if(key == GLFW_KEY_L && action == GLFW_PRESS){
-			mode1=true;
+			mode1 = true;
 		}
 		else if(key == GLFW_KEY_R && action == GLFW_PRESS){
-			mode2=true;
+			mode2 = true;
 		}
 	}
 };  
