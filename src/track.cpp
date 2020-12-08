@@ -317,23 +317,22 @@ unsigned char* loadImage(const char* filepath, int &w, int &h)
 }
 
 
-uint loadCubemap(std::string* faces)
+uint loadCubemap(std::string* paths)
 {
 	unsigned int textureID;
 	glGenTextures(1, &textureID);
 	glBindTexture(GL_TEXTURE_CUBE_MAP, textureID);
 
-	int w, h;
-	for (unsigned int i = 0; i < 6; i++){
-		unsigned char *data = loadImage(faces[i].c_str(), w, h);
-		if(data){
-			// std::cout << w << " " << h << std::endl;
-			glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 
-						 0, GL_RGB, w, h, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
-		}
+	int width, height, nrChannels;
+	for(unsigned int i = 0; i < 6; i++){
+		unsigned char *data = stbi_load(paths[i].c_str(), &width, &height, &nrChannels, 0);
+		if(data)
+			glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
 		else
-			std::cout << "Cubemap tex failed to load at path: " << faces[i] << std::endl;
-		free(data);
+			std::cout << "Cubemap texture failed to load at path: " << paths[i] << std::endl;
+
+		stbi_image_free(data);
+
 	}
 	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
@@ -367,33 +366,27 @@ void initBuffersGL()
 	vTexCoord = glGetAttribLocation(shaderProgram, "vTexCoord");
 	MVP = glGetUniformLocation(shaderProgram, "MVP");
 	normalMatrix =  glGetUniformLocation(shaderProgram, "normalMatrix");
-  	ModelviewMatrix = glGetUniformLocation(shaderProgram, "ModelviewMatrix");
-  	light_stat = glGetUniformLocation(shaderProgram, "light_stat");
-  	headlight = glGetUniformLocation(shaderProgram, "headlight");
-  	spotlight = glGetUniformLocation(shaderProgram, "spotlight");
-  	nrml = glGetUniformLocation(shaderProgram, "nrml");
-  	ViewMatrix = glGetUniformLocation(shaderProgram, "ViewMatrix");
+	ModelviewMatrix = glGetUniformLocation(shaderProgram, "ModelviewMatrix");
+	light_stat = glGetUniformLocation(shaderProgram, "light_stat");
+	headlight = glGetUniformLocation(shaderProgram, "headlight");
+	spotlight = glGetUniformLocation(shaderProgram, "spotlight");
+	nrml = glGetUniformLocation(shaderProgram, "nrml");
+	ViewMatrix = glGetUniformLocation(shaderProgram, "ViewMatrix");
 
 	// Get the attributes from the shader program
 	vPos = glGetAttribLocation(skyshaderProgram, "vPos");
 	view = glGetUniformLocation(skyshaderProgram, "view");
 	projection = glGetUniformLocation(skyshaderProgram, "projection");
 
-	std::string faces[6] = {
-		/*"skybox/skybox2/px1.bmp",
-		"skybox/skybox2/nx1.bmp",
-		"skybox/skybox2/ny1.bmp",
-		"skybox/skybox2/py1.bmp",
-		"skybox/skybox2/pz1.bmp",
-		"skybox/skybox2/nz1.bmp"*/
-		"skybox/skybox1/px.bmp",
-		"skybox/skybox1/nx.bmp",
-		"skybox/skybox1/ny.bmp",
-		"skybox/skybox1/py.bmp",
-		"skybox/skybox1/pz.bmp",
-		"skybox/skybox1/nz.bmp"
+	std::string paths[6] = {
+		"skybox/skybox5/TropicalSunnyDay_px.jpg",
+		"skybox/skybox5/TropicalSunnyDay_nx.jpg",
+		"skybox/skybox5/TropicalSunnyDay_py.jpg",
+		"skybox/skybox5/TropicalSunnyDay_ny.jpg",
+		"skybox/skybox5/TropicalSunnyDay_pz.jpg",
+		"skybox/skybox5/TropicalSunnyDay_nz.jpg",
 	};
-	cubemapTexture = loadCubemap(faces); 
+	cubemapTexture = loadCubemap(paths); 
 
 	// skybox VAO and VBO
 	glGenVertexArrays(1, &skyboxVAO);
@@ -493,79 +486,81 @@ void initBuffersGL()
 	glm::vec4 obstacle4_normals[6*num_expo-6];
 	curved_surface(obstacle4_normals, obstacle4, left3, right3, num_expo, 0);
 
+	glm::vec4 track_color = glm::vec4(165.0/256, 126.0/256, 66.0/256, 1.0);
+
 	// Hierarchical Model
 
-	nodes["rect1"] = new csX75::HNode(nodes["root"], 60, vertices , sizeof(vertices), glm::vec4(1,0,0,0), normals, "textures/ground.jpg", texcoords);
+	nodes["rect1"] = new csX75::HNode(nodes["root"], 60, vertices , sizeof(vertices), track_color, normals, "textures/ground.jpg", texcoords);
 	nodes["rect1"]->change_parameters(-1.5,0,0, 0,0,0, 1,1,1, 0,0,0);
 
-	nodes["semicircle"] = new csX75::HNode(nodes["rect1"], 120, semicircle , sizeof(semicircle), glm::vec4(1,0,0,0), semicircle_normals);
+	nodes["semicircle"] = new csX75::HNode(nodes["rect1"], 120, semicircle , sizeof(semicircle), track_color, semicircle_normals);
 	nodes["semicircle"]->change_parameters(1.5,0,3, 0,0,0, 1,1,1, 0,0,0);
 
-	nodes["rect2"] = new csX75::HNode(nodes["semicircle"], 60, vertices , sizeof(vertices), glm::vec4(1,0,0,0), normals);//, "textures/small_barbara.bmp", texcoords);
+	nodes["rect2"] = new csX75::HNode(nodes["semicircle"], 60, vertices , sizeof(vertices), glm::vec4(1,0,0,0), normals, "textures/ground.jpg", texcoords);
 	nodes["rect2"]->change_parameters(1.5,0,-3, 0,0,0, 1,1,1, 0,0,0);
 
-	nodes["obstacle1"] = new csX75::HNode(nodes["rect2"], 120, obstacle1 , sizeof(obstacle1), glm::vec4(1,0,0,0), obstacle1_normals);
+	nodes["obstacle1"] = new csX75::HNode(nodes["rect2"], 120, obstacle1 , sizeof(obstacle1), track_color, obstacle1_normals);
 	nodes["obstacle1"]->change_parameters(0,0,-1, 0,0,0, 1,1,1, 0,0,0);
 
-	nodes["rect3"] = new csX75::HNode(nodes["obstacle1"], 60, vertices , sizeof(vertices), glm::vec4(1,0,0,0), normals);//, "textures/small_barbara.bmp", texcoords);
+	nodes["rect3"] = new csX75::HNode(nodes["obstacle1"], 60, vertices , sizeof(vertices), glm::vec4(1,0,0,0), normals, "textures/ground.jpg", texcoords);
 	nodes["rect3"]->change_parameters(0,0,-4, 0,0,0, 1,1,1, 0,0,0);
 
-	nodes["semicircle2"] = new csX75::HNode(nodes["rect3"], 120, semicircle , sizeof(semicircle), glm::vec4(1,0,0,0), semicircle_normals);
+	nodes["semicircle2"] = new csX75::HNode(nodes["rect3"], 120, semicircle , sizeof(semicircle), track_color, semicircle_normals);
 	nodes["semicircle2"]->change_parameters(1.5,0,0, 0,0,0, -1,1,-1, 0,0,0);
 
-	nodes["rect4"] = new csX75::HNode(nodes["semicircle2"], 60, vertices , sizeof(vertices), glm::vec4(1,0,0,0), normals);//, "textures/small_barbara.bmp", texcoords);
+	nodes["rect4"] = new csX75::HNode(nodes["semicircle2"], 60, vertices , sizeof(vertices), glm::vec4(1,0,0,0), normals, "textures/ground.jpg", texcoords);
 	nodes["rect4"]->change_parameters(1.5,0,0, 0,0,0, 1,1,0.5, 0,0,0);
 
-	nodes["obstacle2_1"] = new csX75::HNode(nodes["rect4"], 60, obstacle2 , sizeof(obstacle2), glm::vec4(1,0,0,0), obstacle2_normals);
+	nodes["obstacle2_1"] = new csX75::HNode(nodes["rect4"], 60, obstacle2 , sizeof(obstacle2), track_color, obstacle2_normals);
 	nodes["obstacle2_1"]->change_parameters(0,0,2.5, 0,0,0, 1,1,1, 0,0,0);
 
-	nodes["obstacle2_2"] = new csX75::HNode(nodes["obstacle2_1"], 60, obstacle2 , sizeof(obstacle2), glm::vec4(1,0,0,0), obstacle2_normals);
+	nodes["obstacle2_2"] = new csX75::HNode(nodes["obstacle2_1"], 60, obstacle2 , sizeof(obstacle2), track_color, obstacle2_normals);
 	nodes["obstacle2_2"]->change_parameters(0,0,1, 0,0,0, 1,1,-1, 0,0,0);
 
-	nodes["rect5"] = new csX75::HNode(nodes["obstacle2_2"], 60, vertices , sizeof(vertices), glm::vec4(1,0,0,0), normals);//, "textures/small_barbara.bmp", texcoords);
+	nodes["rect5"] = new csX75::HNode(nodes["obstacle2_2"], 60, vertices , sizeof(vertices), glm::vec4(1,0,0,0), normals, "textures/ground.jpg", texcoords);
 	nodes["rect5"]->change_parameters(0,0,1, 0,0,0, 1,1,0.5, 0,0,0);
 
-	nodes["obstacle3_1"] = new csX75::HNode(nodes["rect5"], 12, obstacle3 , sizeof(obstacle2), glm::vec4(1,0,0,0), obstacle3_normals);
+	nodes["obstacle3_1"] = new csX75::HNode(nodes["rect5"], 12, obstacle3 , sizeof(obstacle2), track_color, obstacle3_normals);
 	nodes["obstacle3_1"]->change_parameters(0,0,1.6, 0,0,0, 1,0.1,0.1, 0,0,0);
 
-	nodes["obstacle3_2"] = new csX75::HNode(nodes["obstacle3_1"], 12, obstacle3 , sizeof(obstacle2), glm::vec4(1,0,0,0), obstacle3_normals);
+	nodes["obstacle3_2"] = new csX75::HNode(nodes["obstacle3_1"], 12, obstacle3 , sizeof(obstacle2), track_color, obstacle3_normals);
 	nodes["obstacle3_2"]->change_parameters(0,0,0.2, 0,0,0, 1,0.1,0.1, 0,0,0);
 
-	nodes["obstacle3_3"] = new csX75::HNode(nodes["obstacle3_2"], 12, obstacle3 , sizeof(obstacle2), glm::vec4(1,0,0,0), obstacle3_normals);
+	nodes["obstacle3_3"] = new csX75::HNode(nodes["obstacle3_2"], 12, obstacle3 , sizeof(obstacle2), track_color, obstacle3_normals);
 	nodes["obstacle3_3"]->change_parameters(0,0,0.2, 0,0,0, 1,0.1,0.1, 0,0,0);
 
-	nodes["obstacle3_4"] = new csX75::HNode(nodes["obstacle3_3"], 12, obstacle3 , sizeof(obstacle2), glm::vec4(1,0,0,0), obstacle3_normals);
+	nodes["obstacle3_4"] = new csX75::HNode(nodes["obstacle3_3"], 12, obstacle3 , sizeof(obstacle2), track_color, obstacle3_normals);
 	nodes["obstacle3_4"]->change_parameters(0,0,0.2, 0,0,0, 1,0.1,0.1, 0,0,0);
 
-	nodes["rect6"] = new csX75::HNode(nodes["obstacle3_4"], 60, vertices , sizeof(vertices), glm::vec4(1,0,0,0), normals);//, "textures/small_barbara.bmp", texcoords);
+	nodes["rect6"] = new csX75::HNode(nodes["obstacle3_4"], 60, vertices , sizeof(vertices), glm::vec4(1,0,0,0), normals, "textures/ground.jpg", texcoords);
 	nodes["rect6"]->change_parameters(0,0,0.1, 0,0,0, 1,1,0.5, 0,0,0);
 
-	nodes["semicircle3"] = new csX75::HNode(nodes["rect6"], 120, semicircle , sizeof(semicircle), glm::vec4(1,0,0,0), semicircle_normals);
+	nodes["semicircle3"] = new csX75::HNode(nodes["rect6"], 120, semicircle , sizeof(semicircle), track_color, semicircle_normals);
 	nodes["semicircle3"]->change_parameters(1.5,0,1.5, 0,0,0, 1,1,1, 0,0,0);
 
-	nodes["rect7"] = new csX75::HNode(nodes["semicircle3"], 60, vertices , sizeof(vertices), glm::vec4(1,0,0,0), normals);//, "textures/small_barbara.bmp", texcoords);
+	nodes["rect7"] = new csX75::HNode(nodes["semicircle3"], 60, vertices , sizeof(vertices), glm::vec4(1,0,0,0), normals, "textures/ground.jpg", texcoords);
 	nodes["rect7"]->change_parameters(1.5,0,0, 0,0,0, -1,1,-1, 0,0,0);
 
-	nodes["obstacle4"] = new csX75::HNode(nodes["rect7"], 120, obstacle4 , sizeof(obstacle4), glm::vec4(1,0,0,0), obstacle4_normals);
+	nodes["obstacle4"] = new csX75::HNode(nodes["rect7"], 120, obstacle4 , sizeof(obstacle4), track_color, obstacle4_normals);
 	nodes["obstacle4"]->change_parameters(0,0,-4, 0,0,0, 1,1,1, 0,0,0);
 
-	nodes["rect8"] = new csX75::HNode(nodes["obstacle4"], 60, vertices , sizeof(vertices), glm::vec4(1,0,0,0), normals);//, "textures/small_barbara.bmp", texcoords);
+	nodes["rect8"] = new csX75::HNode(nodes["obstacle4"], 60, vertices , sizeof(vertices), track_color, normals, "textures/ground.jpg", texcoords);
 	nodes["rect8"]->change_parameters(0,0,-1, 0,0,0, -1,1,-1, 0,0,0);
 
-	nodes["semicircle4"] = new csX75::HNode(nodes["rect8"], 120, semicircle , sizeof(semicircle), glm::vec4(1,0,0,0), semicircle_normals);
+	nodes["semicircle4"] = new csX75::HNode(nodes["rect8"], 120, semicircle , sizeof(semicircle), track_color, semicircle_normals);
 	nodes["semicircle4"]->change_parameters(1.5,0,-3, 0,0,0, -1,1,-1, 0,0,0);
 
-	nodes["rect9"] = new csX75::HNode(nodes["semicircle4"], 60, vertices , sizeof(vertices), glm::vec4(1,0,0,0), normals);//, "textures/small_barbara.bmp", texcoords);
+	nodes["rect9"] = new csX75::HNode(nodes["semicircle4"], 60, vertices , sizeof(vertices), glm::vec4(1,0,0,0), normals, "textures/ground.jpg", texcoords);
 	nodes["rect9"]->change_parameters(1.5,0,0, 0,0,0, 1,1,1, 0,0,0);
 
 	glm::vec4 obstacle1_normals_copy[6*num_expo-6];
 	for(int i=0;i<6*num_expo-6;i++)
 		obstacle1_normals_copy[i] = glm::vec4((-1)*obstacle1_normals[i][0], (-1)*obstacle1_normals[i][1], (-1)*obstacle1_normals[i][2], (-1)*obstacle1_normals[i][3]); //inverted gaussian, normals should be in the opposite direction
 
-	nodes["obstacle5"] = new csX75::HNode(nodes["rect9"], 120, obstacle1 , sizeof(obstacle1), glm::vec4(1,0,0,0), obstacle1_normals_copy);
+	nodes["obstacle5"] = new csX75::HNode(nodes["rect9"], 120, obstacle1 , sizeof(obstacle1), track_color, obstacle1_normals_copy);
 	nodes["obstacle5"]->change_parameters(0,0,4, 0,0,0, 1,-1,1, 0,0,0);
 
-	nodes["rect10"] = new csX75::HNode(nodes["obstacle5"], 60, vertices , sizeof(vertices), glm::vec4(1,0,0,0), normals);//, "textures/small_barbara.bmp", texcoords);
+	nodes["rect10"] = new csX75::HNode(nodes["obstacle5"], 60, vertices , sizeof(vertices), track_color, normals, "textures/ground.jpg", texcoords);
 	nodes["rect10"]->change_parameters(0,0,1, 0,0,0, 1,1,1, 0,0,0);
 
 /////////////////////////////////////////////////////////////////////////////////////////////
@@ -589,7 +584,7 @@ void initBuffersGL()
 	nodes["hip"] = new csX75::HNode(nodes["root"], 36, posns_arr, sizeof(posns_arr), red, normals_arr);
 	nodes["hip"]->change_parameters(-1.5,0.25,1.5, 0,0,0, 0,0,0, 0,0,0);
 
-	nodes["torso"] = new csX75::HNode(nodes["hip"], 36, posns_arr, sizeof(posns_arr), green, normals_arr, "textures/all1.bmp", texcoord_arr);
+	nodes["torso"] = new csX75::HNode(nodes["hip"], 36, posns_arr, sizeof(posns_arr), green, normals_arr, "textures/hawaii.jpg", texcoord_arr);
 	nodes["torso"]->change_parameters(0,0,0, 0,0,0, rscale*1.5,rscale*2,rscale*0.5, 0,rscale*2,0);
 
 	nodes["neck"] = new csX75::HNode(nodes["torso"], 36, posns_arr, sizeof(posns_arr), sepia, normals_arr);
@@ -674,7 +669,7 @@ void initBuffersGL()
 
 	nodes["frontlight"] = new csX75::HNode(nodes["engine"], 36, posns_arr, sizeof(posns_arr), frontlight_color, normals_arr);
 	nodes["frontlight"]->change_parameters(0,bscale*0.5,0, 0,0,25, bscale*0.2,bscale*0.4,bscale*0.4, bscale*3,0,0);
-	nodes["body1"] = new csX75::HNode(nodes["engine"], 36, posns_arr, sizeof(posns_arr), body1_color, normals_arr, "textures/small_barbara.bmp", texcoord_arr);
+	nodes["body1"] = new csX75::HNode(nodes["engine"], 36, posns_arr, sizeof(posns_arr), body1_color, normals_arr, "textures/blue.jpg", texcoord_arr);
 	nodes["body1"]->change_parameters(0,bscale*0.5,0, 0,0,25, bscale*1.4,bscale*0.5,bscale*0.5, bscale*1.5,0,0);
 	nodes["body2"] = new csX75::HNode(nodes["engine"], 36, posns_arr, sizeof(posns_arr), seat_color, normals_arr);
 	nodes["body2"]->change_parameters(0,bscale*0.5,0, 0,0,-10, bscale*1.4,bscale*0.45,bscale*0.5, -bscale*1.5,0,0);

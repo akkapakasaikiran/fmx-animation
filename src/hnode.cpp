@@ -114,29 +114,21 @@ namespace csX75
 			free(data);	*/
 
 			int width, height, nrChannels;
-    		stbi_set_flip_vertically_on_load(true); // tell stb_image.h to flip loaded texture's on the y-axis.
-    		// The FileSystem::getPath(...) is part of the GitHub repository so we can find files on any IDE/platform; replace it with your own image path.
-    		unsigned char *data = stbi_load(texfilepath.c_str(), &width, &height, &nrChannels, 0);
-    		if (data)
-    		{
-    			glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
-        		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
-        		glGenerateMipmap(GL_TEXTURE_2D);
-    		}
-    		else
-    		{
-        		std::cout << "Failed to load texture" << std::endl;
-    		}
-    		stbi_image_free(data);
+			stbi_set_flip_vertically_on_load(true); // tell stb_image.h to flip loaded texture's on the y-axis.
+			unsigned char *data = stbi_load(texfilepath.c_str(), &width, &height, &nrChannels, 0);
+			if(data){
+				glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+				glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
+				glGenerateMipmap(GL_TEXTURE_2D);
+			}
+			else
+				std::cout << "Failed to load texture" << std::endl;
+			stbi_image_free(data);
 		}
 
 		// Set parent
-		if(a_parent == NULL)
-			parent = NULL;
-		else{
-			parent = a_parent;
-			parent->add_child(this);
-		}
+		parent = a_parent;
+		if(a_parent != NULL) parent->add_child(this);
 
 		// Initialize parameters 
 		tx = ty = tz = 0;
@@ -192,7 +184,7 @@ namespace csX75
 
 		// bind Texture
 		if(using_texture)
-        	glBindTexture(GL_TEXTURE_2D, texture);
+			glBindTexture(GL_TEXTURE_2D, texture);
 
 		glBindVertexArray(vao);
 		glDrawArrays(GL_TRIANGLES, 0, num_vertices);
