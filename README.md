@@ -4,20 +4,40 @@ An application that models, renders, and animates a freestyle motocross (FMX) ri
 
 [Here](https://youtu.be/RhG3SWKn6W8) is an animated video created using this application.
 
-<img src="/figs/rider.jpg" alt="Rider" style="width:40%; padding:4%"/>
-<img src="/figs/bike.jpg" alt="Bike" style="width:40%; padding:4%"/>
-<img src="/figs/track.jpg" alt="Track" style="width:40%; padding:4%"/>
-<img src="/figs/scene.jpg" alt="Scene" style="width:40%; padding:4%"/>
+<p align="middle">
+	<img src="figs/rider.jpg" width="35%"> 
+	<img src="figs/bike.jpg" width="35%"> 
+	<img src="figs/track.jpg" width="35%">
+	<img src="figs/scene.jpg" width="35%">
+</p>
 
-### Requirements
+## Requirements
 GLEW and GLFW. Follow [this](https://github.com/paragchaudhuri/cs475-tutorials/tree/master/Tutorial_00#before-you-begin) for installation instructions. 
 
-### Running the code
+## Running the code
 - `make` to compile the neccesary files and create the executable(s) 
 - `./fmx-animate` to start the application
 - `make clean` to start afresh
 
-### Keybindings
+## Collaborators
+- Akkapaka Saikiran [[akkapakasaikiran](https://github.com/akkapakasaikiran)]
+- Parth Vipul Sangani [[parthsangani00](https://github.com/parthsangani00)]
+
+## Credits
+- This project was done as part of CS 475, a course at IIT Bombay. 
+	[[course page](https://www.cse.iitb.ac.in/~paragc/course/2020-cs475/)] [[showcase](https://sites.google.com/iitb.ac.in/cs475cs675-2020/home?authuser=0)]
+- We made use of the [CS 475 Tutorials](https://github.com/paragchaudhuri/cs475-tutorials) for some of the base code. In particular, Tutorial 5 for Phong shading and Tutorial 7 for hierarchical modeling.
+- We used the [STB](https://github.com/nothings/stb/) library to read and write into files and images.
+- For shading and texturing, [Learn OpenGL](https://learnopengl.com/) was invaluable. 
+- We used [babylonjs](https://doc.babylonjs.com/toolsAndResources/assetLibraries/availableTextures#cubetextures) for the environment maps. 
+- We also referred to the official websites of [GLFW](https://www.glfw.org/) and [GLM](https://github.com/g-truc/glm).
+- Music credits (in the animated video):
+	- Achint Thakkar - [Scam 1992 Theme (Official)](https://youtu.be/BLeOcCeqsfI).
+	- Vicetone & Tony Igy - [Astronomia](https://youtu.be/iLBBRuVDOo4). Popularized by the "Dancing Pallbearers" as the [Coffin Song](https://youtu.be/j9V78UbdzWI).
+
+
+
+## Appendix: Keybindings
 The rider and the bike can be manipulated (translated or rotated). 
 
 - Choosing the object to be manipulated.
@@ -78,21 +98,3 @@ The rider and the bike can be manipulated (translated or rotated).
 
 -  ESC: Close the window
 
-
-
-### Collaborators
-- Akkapaka Saikiran [[akkapakasaikiran](https://github.com/akkapakasaikiran)]
-- Parth Vipul Sangani [[parthsangani00](https://github.com/parthsangani00)]
-
-### Credits
-- This project was done as part of CS 475, a course at IIT Bombay. 
-	[[course page](https://www.cse.iitb.ac.in/~paragc/course/2020-cs475/)] [[showcase](https://sites.google.com/iitb.ac.in/cs475cs675-2020/home?authuser=0)]
-- We made use of the [CS 475 Tutorials](https://github.com/paragchaudhuri/cs475-tutorials) for some of the base code. In particular, Tutorial 5 for Phong shading and Tutorial 7 for hierarchical modeling.
-- We used the [STB](https://github.com/nothings/stb/) library to read and write into files and images.
-- For shading and texturing, [Learn OpenGL](https://learnopengl.com/) was invaluable and we have borrowed some code from there as well. 
-- For the environment map we used [babylonjs](https://doc.babylonjs.com/toolsAndResources/assetLibraries/availableTextures#cubetextures).
-- We also referred to the official websites of GLFW and GLM.
-
-Song Credits (in the animated video):
-- Achint Thakkar, Music Composer of the Television Series "Scam 1992: The Harshad Mehta Story"
-- Astromania, Music Composer of the Coffin Song. This was popularised by the "Dancing Pallbearers"
