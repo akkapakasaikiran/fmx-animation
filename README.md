@@ -4,6 +4,11 @@ An application that models, renders, and animates a freestyle motocross (FMX) ri
 
 [Here](https://youtu.be/RhG3SWKn6W8) is an animated video created using this application.
 
+<img src="/figs/rider.jpg" alt="Rider" style="width:40%; padding:4%"/>
+<img src="/figs/bike.jpg" alt="Bike" style="width:40%; padding:4%"/>
+<img src="/figs/track.jpg" alt="Track" style="width:40%; padding:4%"/>
+<img src="/figs/scene.jpg" alt="Scene" style="width:40%; padding:4%"/>
+
 ### Requirements
 GLEW and GLFW. Follow [this](https://github.com/paragchaudhuri/cs475-tutorials/tree/master/Tutorial_00#before-you-begin) for installation instructions. 
 
